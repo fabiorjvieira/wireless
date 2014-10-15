@@ -1,0 +1,1 @@
+rm $1/graphs/* $1/statistics/* $1/vertices/*

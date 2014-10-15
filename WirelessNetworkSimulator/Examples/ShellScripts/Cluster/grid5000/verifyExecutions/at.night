@@ -1,0 +1,6 @@
+ssh frontend.bordeaux.grid5000.fr "bash ~/80.3"
+ssh frontend.grenoble.grid5000.fr "bash ~/80.4"
+ssh frontend.sophia.grid5000.fr "bash ~/80.5"
+ssh frontend.orsay.grid5000.fr "bash ~/80.6"
+ssh frontend.lille.grid5000.fr "bash ~/80.7"
+

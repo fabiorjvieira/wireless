@@ -1,0 +1,6 @@
+# power: 0.03, band: 2e+07, path loss: 4, SINR: 25, nodes: 20, file: ./node/graph.2431.85.dot.node
+# Reading file:./node/graph.2431.85.dot.node
+Best: 1 2 3 4 7 
+1 2 5 6 8 9 3 0 4 7 
+Fabio: 1 0 4 2 
+1 0 3 4 9 2 5 6 7 8 

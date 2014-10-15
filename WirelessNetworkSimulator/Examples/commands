@@ -1,0 +1,28 @@
+uacmeedd08
+d@rksid&
+
+bash oneRouteTest.sh 7 ./TopologyExamples/Networks/MINI02/7/1/7.1 ./TopologyExamples/Networks/MINI02/7/1/routes
+bash oneRouteTest.sh 6 TopologyExamples/Networks/MINI00/6/mini00 TopologyExamples/Networks/MINI00/6/routes 
+bash oneRouteTest.sh 5 TopologyExamples/Networks/MINI/mini TopologyExamples/Networks/MINI/routes
+bash oneRouteTest.sh 80 ./TopologyExamples/Networks/80/2/80.2 ./TopologyExamples/Networks/80/2/80.2.4.31.each.3.neighbor.routes
+
+verificar intervalo de confiança "de nouveau"!
+copiar scripts que disparam Routing e Performance - ok
+Terminar scripts de gráficos
+  diminuir o avg - ok
+  o da ju - ok
+  t-test
+  confirmar pq dijkstra acha tao poucos caminhos - ok
+Fazer novo levantamento bibliográfico
+
+Routing
+   ${networkSize} ./Networks/${networkSize}/${network}/${networkSize}.${network}
+   N variation
+      ${networkSize} ./Networks/${networkSize}/${network}/${networkSize}.${network} ${inferior} ${superior}
+Performance
+      ${networkSize} ./Networks/${networkSize}/${network}/${networkSize}.${network} ${inferior} ${superior} ${type} ${initialBuffer} ${finalBuffer}
+ 
+importante ver quem está abaixo do 1/3!
+OK
+
+mesma cor para ic e media no gnuplot.
