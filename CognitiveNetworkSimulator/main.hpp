@@ -225,7 +225,7 @@ WirelessParameters * loadWirelessParametersList(std::string fileName)
 }
 
 /*agent file structure
-TYPE(3 characters) IDENTIFICATION(3 digits ) X (Cartesian coord) Y (Cartesian coord) Z (Cartesian coord)
+TYPE(3 characters) IDENTIFICATION(3 digits) X(Cartesian coord) Y(Cartesian coord) Z(Cartesian coord)
 */
 AgentList * loadAgents(std::string fileName)
 {
@@ -292,7 +292,7 @@ AgentList * loadAgents(std::string fileName)
 }
 
 /*Licensed Queue file structure
-INTERVAL(6 digits) TRANSMITTER(TYPE IDENTIFICATION) RECEIVER(TYPE IDENTIFICATION) CHANNEL(3 digits)
+INTERVAL(max 6 digits) TRANSMITTER(TYPE + IDENTIFICATION) RECEIVER(TYPE + IDENTIFICATION) CHANNEL(3 digits)
 */
 void loadLicensedQueue(std::string fileName, std::streampos & filePosition, LicensedQueue & licensedQueue, AgentList & agentList, unsigned long long int interval)
 {
@@ -368,8 +368,8 @@ void loadLicensedQueue(std::string fileName, std::streampos & filePosition, Lice
    file.close();
 }
 
-/*Licensed Queue file structure
-INTERVAL TRANSMITTER(TYPE IDENTIFICATION) RECEIVER(TYPE IDENTIFICATION) CHANNEL
+/*Cognitive Queue file structure
+INTERVAL TRANSMITTER RECEIVER CHANNEL
 */
 void loadCognitiveRequestQueue(std::string fileName, std::streampos & filePosition, CognitiveRequestQueue & cognitiveRequestQueue, AgentList & agentList, unsigned long long int interval)
 {
