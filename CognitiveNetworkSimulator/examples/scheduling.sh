@@ -1,13 +1,13 @@
-for i in `seq 0 2880`
+for i in `seq 0 86400`
 do
-   j=$(($i%60))
+   j=$(($i%3600))
    j=$((i-j))
-   j=$((j/60))
+   j=$((j/3600))
    j=$((j%2))
-   if [ $j == 0 ]
-   then
-      echo $i" AT 000 IV 000 000"
-      echo $i" AT 000 PC 000 000"
-   fi
+   #if [ $j == 0 ]
+   #then
+      echo $i" AT 000 IV 000 0000"
+      echo $i" AT 000 PC 000 0000"
+   #fi
 done
 

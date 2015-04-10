@@ -139,6 +139,14 @@ std::string intToByte(unsigned long long int integer)
    return binary;
 }
 
+std::string intToAlpha(unsigned long long int integer)
+{
+	std::ostringstream alpha;
+	alpha.str("");
+	alpha << integer;
+	return alpha.str();
+}
+
 void oldSimulator(IPCkit * ipcKit, unsigned long int maxInterval)
 {
    //Loop

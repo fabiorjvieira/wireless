@@ -292,7 +292,7 @@ AgentList * loadAgents(std::string fileName)
 }
 
 /*Licensed Queue file structure
-INTERVAL(max 6 digits) TRANSMITTER(TYPE + IDENTIFICATION) RECEIVER(TYPE + IDENTIFICATION) CHANNEL(3 digits)
+INTERVAL(max 6 digits) TRANSMITTER(TYPE + IDENTIFICATION) RECEIVER(TYPE + IDENTIFICATION) CHANNEL(4 digits)
 */
 void loadLicensedQueue(std::string fileName, std::streampos & filePosition, LicensedQueue & licensedQueue, AgentList & agentList, unsigned long long int interval)
 {
@@ -485,14 +485,22 @@ void saveSensoringQueue(std::string fileName, SensoringQueue & sensoringQueue, u
 
   for (unsigned int sensoringEventIndex = 0; sensoringEventIndex < sensoringQueue.events.size() and interval == sensoringQueue.events.at(sensoringEventIndex).interval; sensoringEventIndex++)
   {
-    file << sensoringQueue.events.at(sensoringEventIndex).interval << FIELD_SEPARATOR;
-    file << AgentTypeChar[sensoringQueue.events.at(sensoringEventIndex).transmitter->type] << FIELD_SEPARATOR;
-    file << sensoringQueue.events.at(sensoringEventIndex).transmitter->identification << FIELD_SEPARATOR;
-    //cycle-stationary
-    file << AgentTypeChar[sensoringQueue.events.at(sensoringEventIndex).receiver->type] << FIELD_SEPARATOR;
-    file << std::setw(3) << std::setfill(CHAR_FILLER) << FIELD_SEPARATOR;
-    file << sensoringQueue.events.at(sensoringEventIndex).channel << FIELD_SEPARATOR;
-    file << sensoringQueue.risk.at(sensoringEventIndex) << std::endl;
+//    file << sensoringQueue.events.at(sensoringEventIndex).interval << FIELD_SEPARATOR;
+//    file << AgentTypeChar[sensoringQueue.events.at(sensoringEventIndex).transmitter->type] << FIELD_SEPARATOR;
+//    file << sensoringQueue.events.at(sensoringEventIndex).transmitter->identification << FIELD_SEPARATOR;
+//    //cycle-stationary
+//    file << AgentTypeChar[sensoringQueue.events.at(sensoringEventIndex).receiver->type] << FIELD_SEPARATOR;
+//    file << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << FIELD_SEPARATOR;
+//    file << sensoringQueue.events.at(sensoringEventIndex).channel << FIELD_SEPARATOR;
+//    file << sensoringQueue.risk.at(sensoringEventIndex) << std::endl;
+	  file << std::setw(INTERVAL_SIZE) << std::setfill(CHAR_FILLER) << std::right << intToAlpha(sensoringQueue.events.at(sensoringEventIndex).interval);
+	  file << AgentTypeChar[sensoringQueue.events.at(sensoringEventIndex).transmitter->type];
+	  file << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << intToAlpha(sensoringQueue.events.at(sensoringEventIndex).transmitter->identification);
+      //cycle-stationary
+	  file << AgentTypeChar[sensoringQueue.events.at(sensoringEventIndex).receiver->type];
+	  file << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << CHAR_FILLER;
+	  file << std::setw(CHANNEL_SIZE) << std::setfill(CHAR_FILLER) << std::right << intToAlpha(sensoringQueue.events.at(sensoringEventIndex).channel);
+	  file << std::setw(RISK_SIZE) << std::setfill(CHAR_FILLER) << std::left << intToAlpha(sensoringQueue.risk.at(sensoringEventIndex)) << std::endl;
   }
 
   file.close();
@@ -546,25 +554,29 @@ char * writeSensoringQueue(key_t memoryKey, char * sharedMemory, SensoringQueue 
    std::stringstream writeOn;
 
    //start tag
-   writeOn << SENSORING_QUEUE_PREFIX << START_DATA << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << memoryKey;
+   writeOn << SENSORING_QUEUE_PREFIX << START_DATA;
+   writeOn << std::setw(KEY_SIZE) << std::right << std::setfill(CHAR_FILLER) << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
    sharedMemory += writeOn.str().size();
    for (unsigned int sensoringEventIndex = 0; sensoringEventIndex < sensoringQueue.events.size() and interval == sensoringQueue.events.at(sensoringEventIndex).interval; sensoringEventIndex++)
    {
       //Write on the shared memory segment 24 bytes (TAG_SIZE)
       writeOn.str("");
-      writeOn << std::setw(INTERVAL_SIZE) << std::setfill(BINARY_FILLER) << intToByte(sensoringQueue.events.at(sensoringEventIndex).interval);
-      writeOn << AgentTypeChar[sensoringQueue.events.at(sensoringEventIndex).transmitter->type] << std::setw(3) << std::setfill(CHAR_FILLER) << sensoringQueue.events.at(sensoringEventIndex).transmitter->identification;
+      writeOn << std::setw(INTERVAL_SIZE) << std::setfill(BINARY_FILLER) << std::right << intToByte(sensoringQueue.events.at(sensoringEventIndex).interval);
+      writeOn << AgentTypeChar[sensoringQueue.events.at(sensoringEventIndex).transmitter->type];
+      writeOn << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << sensoringQueue.events.at(sensoringEventIndex).transmitter->identification;
       //cycle-stationary
-      writeOn << AgentTypeChar[sensoringQueue.events.at(sensoringEventIndex).receiver->type] << std::setw(3) << std::setfill(CHAR_FILLER) << CHAR_FILLER;// << sensoringQueue.events.at(sensoringEventIndex).receiver->identification;
-      writeOn << std::setw(CHANNEL_SIZE) << std::setfill(BINARY_FILLER) << intToByte(sensoringQueue.events.at(sensoringEventIndex).channel);
+      writeOn << AgentTypeChar[sensoringQueue.events.at(sensoringEventIndex).receiver->type];
+      writeOn << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << CHAR_FILLER;// << sensoringQueue.events.at(sensoringEventIndex).receiver->identification;
+      writeOn << std::setw(CHANNEL_SIZE) << std::setfill(BINARY_FILLER) << std::right << intToByte(sensoringQueue.events.at(sensoringEventIndex).channel);
       ///*debug*/std::cout << std::setw(RISK_SIZE) << std::setfill(CHAR_FILLER) << std::left << riskToString(sensoringQueue.risk.at(sensoringEventIndex)) << std::endl;
       writeOn << std::setw(RISK_SIZE) << std::setfill(CHAR_FILLER) << std::left << riskToString(sensoringQueue.risk.at(sensoringEventIndex));
       memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
       sharedMemory += writeOn.str().size();
    }
    //end tag
-   writeOn << SENSORING_QUEUE_PREFIX << END_DATA << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << memoryKey;
+   writeOn << SENSORING_QUEUE_PREFIX << END_DATA;
+   writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
    return sharedMemory;
 }
@@ -575,17 +587,20 @@ char * writeCognitiveSuccessQueue(key_t memoryKey, char * sharedMemory, SuccessQ
    std::stringstream writeOn;
 
    //start tag
-   writeOn << COGNITIVE_SUCCESS_QUEUE_PREFIX << START_DATA << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << memoryKey;
+   writeOn << COGNITIVE_SUCCESS_QUEUE_PREFIX << START_DATA;
+   writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
    sharedMemory += writeOn.str().size();
    for (unsigned int cognitiveSuccessEventIndex = 0; cognitiveSuccessEventIndex < cognitiveSuccessQueue.events.size() and interval == cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).interval; cognitiveSuccessEventIndex++)
    {
       //Write on the shared memory segment 24 bytes (TAG_SIZE)
       writeOn.str("");
-      writeOn << std::setw(INTERVAL_SIZE) << std::setfill(BINARY_FILLER) << intToByte(cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).interval);
-      writeOn << AgentTypeChar[cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).transmitter->type] << std::setw(3) << std::setfill(CHAR_FILLER) << cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).transmitter->identification;
-      writeOn << AgentTypeChar[cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).receiver->type] << std::setw(3) << std::setfill(CHAR_FILLER) << cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).receiver->identification;
-      writeOn << std::setw(CHANNEL_SIZE) << std::setfill(BINARY_FILLER) << intToByte(cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).channel);
+      writeOn << std::setw(INTERVAL_SIZE) << std::setfill(BINARY_FILLER) << std::right << intToByte(cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).interval);
+      writeOn << AgentTypeChar[cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).transmitter->type];
+      writeOn << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).transmitter->identification;
+      writeOn << AgentTypeChar[cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).receiver->type];
+      writeOn << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).receiver->identification;
+      writeOn << std::setw(CHANNEL_SIZE) << std::setfill(BINARY_FILLER) << std::right << intToByte(cognitiveSuccessQueue.events.at(cognitiveSuccessEventIndex).channel);
       writeOn << cognitiveSuccessQueue.success.at(cognitiveSuccessEventIndex).licensed;
       writeOn << cognitiveSuccessQueue.success.at(cognitiveSuccessEventIndex).cognitive;
       writeOn << cognitiveSuccessQueue.success.at(cognitiveSuccessEventIndex).success;
@@ -593,7 +608,8 @@ char * writeCognitiveSuccessQueue(key_t memoryKey, char * sharedMemory, SuccessQ
       sharedMemory += writeOn.str().size();
    }
    //end tag
-   writeOn << COGNITIVE_SUCCESS_QUEUE_PREFIX << END_DATA << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << memoryKey;
+   writeOn << COGNITIVE_SUCCESS_QUEUE_PREFIX << END_DATA;
+   writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
    return sharedMemory;
 }
@@ -604,23 +620,27 @@ char * writeCognitiveRequestQueue(key_t memoryKey, char * sharedMemory, Cognitiv
    std::stringstream writeOn;
 
    //start tag
-   writeOn << COGNITIVE_REQUEST_QUEUE_PREFIX << START_DATA << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << memoryKey;
+   writeOn << COGNITIVE_REQUEST_QUEUE_PREFIX << START_DATA;
+   writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
    sharedMemory += writeOn.str().size();
    for (unsigned int cognitiveRequestIndex = 0; cognitiveRequestIndex < cognitiveRequestQueue.request.size() and interval == cognitiveRequestQueue.request.at(cognitiveRequestIndex).interval; cognitiveRequestIndex++)
    {
       //Write on the shared memory segment 24 bytes (TAG_SIZE)
       writeOn.str("");
-      writeOn << std::setw(INTERVAL_SIZE) << std::setfill(BINARY_FILLER) << intToByte(cognitiveRequestQueue.request.at(cognitiveRequestIndex).interval);
-      writeOn << AgentTypeChar[cognitiveRequestQueue.request.at(cognitiveRequestIndex).transmitter->type] << std::setw(3) << std::setfill(CHAR_FILLER) << cognitiveRequestQueue.request.at(cognitiveRequestIndex).transmitter->identification;
-      writeOn << AgentTypeChar[cognitiveRequestQueue.request.at(cognitiveRequestIndex).receiver->type] << std::setw(3) << std::setfill(CHAR_FILLER) << cognitiveRequestQueue.request.at(cognitiveRequestIndex).receiver->identification;
-      writeOn << std::setw(DELTA_INTERVAL_SIZE) << std::setfill(BINARY_FILLER) << intToByte(cognitiveRequestQueue.request.at(cognitiveRequestIndex).deltaInterval);
-      writeOn << std::setw(THROUGHPUT_SIZE) << std::setfill(BINARY_FILLER) << intToByte(cognitiveRequestQueue.request.at(cognitiveRequestIndex).minimumThroughput);
+      writeOn << std::setw(INTERVAL_SIZE) << std::setfill(BINARY_FILLER) << std::right << intToByte(cognitiveRequestQueue.request.at(cognitiveRequestIndex).interval);
+      writeOn << AgentTypeChar[cognitiveRequestQueue.request.at(cognitiveRequestIndex).transmitter->type];
+      writeOn << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << cognitiveRequestQueue.request.at(cognitiveRequestIndex).transmitter->identification;
+      writeOn << AgentTypeChar[cognitiveRequestQueue.request.at(cognitiveRequestIndex).receiver->type];
+      writeOn << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << cognitiveRequestQueue.request.at(cognitiveRequestIndex).receiver->identification;
+      writeOn << std::setw(DELTA_INTERVAL_SIZE) << std::setfill(BINARY_FILLER) << std::right << intToByte(cognitiveRequestQueue.request.at(cognitiveRequestIndex).deltaInterval);
+      writeOn << std::setw(THROUGHPUT_SIZE) << std::setfill(BINARY_FILLER) << std::right << intToByte(cognitiveRequestQueue.request.at(cognitiveRequestIndex).minimumThroughput);
       memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
       sharedMemory += writeOn.str().size();
    }
    //end tag
-   writeOn << COGNITIVE_REQUEST_QUEUE_PREFIX << END_DATA << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << memoryKey;
+   writeOn << COGNITIVE_REQUEST_QUEUE_PREFIX << END_DATA;
+   writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
    return sharedMemory;
 }
@@ -633,13 +653,15 @@ char * readCognitiveQueue(key_t memoryKey, char * sharedMemory, CognitiveQueue &
    Event event;
    std::stringstream tag;
 
-   tag << COGNITIVE_QUEUE_PREFIX << START_DATA << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << memoryKey;
+   tag << COGNITIVE_QUEUE_PREFIX << START_DATA;
+   tag << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(&readFrom, sharedMemory, TAG_SIZE);
    //test start tag - 24 bytes (TAG_SIZE)
    if (tag.str().compare(readFrom) == 0)
    {
       tag.str("");
-      tag << COGNITIVE_QUEUE_PREFIX << END_DATA << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << memoryKey;
+      tag << COGNITIVE_QUEUE_PREFIX << END_DATA;
+      tag << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
       sharedMemory += TAG_SIZE;
       memcpy(&readFrom, sharedMemory, TAG_SIZE);
       do
@@ -715,7 +737,8 @@ void licensedSuccessQueueCalculus(SuccessQueue & licensedSuccessQueue, LicensedQ
       {
          transmitterB = licensedQueue.events.at(licensedEventIndexB).transmitter;
          receiverB = licensedQueue.events.at(licensedEventIndexB).receiver;
-         if ((transmitterB->type == AT and receiverB->type != IV) or (transmitterB->type == AW and (receiverB->type != IV or receiverB->type != AC))) continue;
+         //if it is a license passive communication (unidirectional, from antenna to client), then ignore it since there is always a beacon on the same channel that will be take into account (receiver = invalid)
+         if ((transmitterB->type == AT and receiverB->type != IV) or (transmitterB->type == AH and (receiverB->type != IV or receiverB->type != AC))) continue;
 
          channelB = licensedQueue.events.at(licensedEventIndexB).channel;
          if (transmitterA != transmitterB and channelA == channelB)
@@ -738,7 +761,8 @@ void licensedSuccessQueueCalculus(SuccessQueue & licensedSuccessQueue, LicensedQ
       {
          transmitterB = licensedQueue.events.at(licensedEventIndexB).transmitter;
          receiverB = licensedQueue.events.at(licensedEventIndexB).receiver;
-         if ((transmitterB->type == AT and receiverB->type != IV) or (transmitterB->type == AW and (receiverB->type != IV or receiverB->type != AC))) continue;
+         //if it is a license passive communication (unidirectional, from antenna to client), then ignore it since there is always a beacon on the same channel that will be take into account (receiver = invalid)
+         if ((transmitterB->type == AT and receiverB->type != IV) or (transmitterB->type == AH and (receiverB->type != IV or receiverB->type != AC))) continue;
 
          channelB = licensedQueue.events.at(licensedEventIndexB).channel;
          if (transmitterA != transmitterB and channelA == channelB)
@@ -849,7 +873,8 @@ void cognitiveSuccessQueueCalculus(SuccessQueue & cognitiveSuccessQueue, License
       {
          transmitterB = licensedQueue.events.at(licensedEventIndexB).transmitter;
          receiverB = licensedQueue.events.at(licensedEventIndexB).receiver;
-         if ((transmitterB->type == AT and receiverB->type != IV) or (transmitterB->type == AW and (receiverB->type != IV or receiverB->type != AC))) continue;
+         //if it is a license passive communication (unidirectional, from antenna to client), then ignore it since there is always a beacon on the same channel that will be take into account (receiver = invalid)
+         if ((transmitterB->type == AT and receiverB->type != IV) or (transmitterB->type == AH and (receiverB->type != IV or receiverB->type != AC))) continue;
          channelB = licensedQueue.events.at(licensedEventIndexB).channel;
          if (transmitterA != transmitterB and channelA == channelB)
          {
@@ -906,7 +931,7 @@ void sensoringQueueCalculus(AgentList * agentList, SensoringQueue & sensoringQue
    unsigned long int channel;
    float riskValue, maximumRiskValue;
    Event sensor;
-   Agent * transmitter;
+   Agent * transmitter, * maximumRiskAgent;
 
    //frequency spectrum |-TV-|-WIFI-|-COG-|
    numberOfChannels += wirelessParametersList[AT].channels;
@@ -921,53 +946,68 @@ void sensoringQueueCalculus(AgentList * agentList, SensoringQueue & sensoringQue
       {
          //Cognitive network
          maximumRiskValue = 0;
-         sensor.receiver = & INVALID_AGENT;
+         maximumRiskAgent = & INVALID_AGENT;
          for (unsigned int cognitiveEventIndex = 0; cognitiveEventIndex < cognitiveQueue.events.size() and interval == cognitiveQueue.events.at(cognitiveEventIndex).interval; cognitiveEventIndex++)
          {
             transmitter = cognitiveQueue.events.at(cognitiveEventIndex).transmitter;
             channel = cognitiveQueue.events.at(cognitiveEventIndex).channel;
             if (transmitter != sensor.transmitter and sensor.channel == channel)
             {
-               //risk of the communication transmitter to receiver
-               sensor.receiver = transmitter;
-               riskValue = risk(sensor.transmitter, sensor.receiver, wirelessParametersList);
-               sensoringQueue.events.push_back(sensor);
-               sensoringQueue.risk.push_back(riskValue);
-               //risk of the communication receiver to transmitter
+               //risk of the communication from transmitter to receiver
+               riskValue = risk(sensor.transmitter, transmitter, wirelessParametersList);
+               //sensoringQueue.events.push_back(sensor); ???por que fiz isso, para a seguna fase?
+               //sensoringQueue.risk.push_back(riskValue);
+               if (riskValue > maximumRiskValue)
+			   {
+            	   maximumRiskValue = riskValue;
+            	   maximumRiskAgent = transmitter;
+			   }
+               //risk of the communication from receiver to transmitter
                sensor.receiver = cognitiveQueue.events.at(cognitiveEventIndex).receiver;
                riskValue = risk(sensor.transmitter, sensor.receiver, wirelessParametersList);
-               if (riskValue > maximumRiskValue) maximumRiskValue = riskValue;
+               if (riskValue > maximumRiskValue)
+			   {
+            	   maximumRiskValue = riskValue;
+            	   maximumRiskAgent = sensor.receiver;
+			   }
             }
          }
+         sensor.receiver = maximumRiskAgent;
          sensoringQueue.events.push_back(sensor);
          sensoringQueue.risk.push_back(maximumRiskValue);
 
          //Licensed network
          maximumRiskValue = 0;
-         sensor.receiver = & INVALID_AGENT;
+         maximumRiskAgent = & INVALID_AGENT;
          for (unsigned int licensedEventIndex = 0; licensedEventIndex < licensedQueue.events.size() and interval == licensedQueue.events.at(licensedEventIndex).interval; licensedEventIndex++)
          {
             transmitter = licensedQueue.events.at(licensedEventIndex).transmitter;
             sensor.receiver = licensedQueue.events.at(licensedEventIndex).receiver;
-            if ((transmitter->type == AT and sensor.receiver->type != IV) or (transmitter->type == AW and (sensor.receiver->type != IV or sensor.receiver->type != AC))) continue;
+            //if it is a license passive communication (unidirectional, from antenna to client), then ignore it since there is always a beacon on the same channel that will be take into account (receiver = invalid)
+            if ((transmitter->type == AT and sensor.receiver->type != IV) or (transmitter->type == AH and (sensor.receiver->type != IV or sensor.receiver->type != AC))) continue;
             channel = licensedQueue.events.at(licensedEventIndex).channel;
             if (transmitter != sensor.transmitter and sensor.channel == channel)
             {
-               //risk of the communication receiver to transmitter
+               //risk of the communication from an active receiver to its transmitter
                if (sensor.receiver->type == AC)
                {
                   riskValue = risk(sensor.transmitter, sensor.receiver, wirelessParametersList);
-                  if (riskValue > maximumRiskValue) maximumRiskValue = riskValue;
+                  if (riskValue > maximumRiskValue)
+				  {
+                	  maximumRiskValue = riskValue;
+                      maximumRiskAgent = sensor.receiver;
+				  }
                }
-               //risk of the communication transmitter to receiver
+               //risk of the communication from transmitter to receiver
                riskValue = risk(sensor.transmitter, transmitter, wirelessParametersList);
                if (riskValue > maximumRiskValue)
                {
                   maximumRiskValue = riskValue;
-                  sensor.receiver = transmitter;
+                  maximumRiskAgent = transmitter;
                }
             }
          }
+         sensor.receiver = maximumRiskAgent;
          sensoringQueue.events.push_back(sensor);
          sensoringQueue.risk.push_back(maximumRiskValue);
       }
