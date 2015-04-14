@@ -65,7 +65,7 @@ int networkOlga(int argn, char ** argc)
 	std::cout << "Olga networks, nodes: " << numberOfNodes << ", rounds: " << numberOfRounds << ", directory: " << directory.str() << std::endl;
 
 	//simulation area initialization
-	maximumCommunicationDistance = 20;
+	maximumCommunicationDistance = 185.537;
 	maximumSquareSide = 1000;
 	minimumSquareSide = 1000;
 

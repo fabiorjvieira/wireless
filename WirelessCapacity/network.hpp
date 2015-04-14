@@ -79,6 +79,8 @@ int network(int argn, char ** argc)
 
 	//simulation area initialization
 	maximumCommunicationDistance = linkSize(transmissionPower, pathLoss, bandWidth, snrThreshold);
+	std::cout << maximumCommunicationDistance << std::endl;
+	return 0;
 	maximumSquareSide = (1.00*numberOfNodes)*maximumCommunicationDistance/std::sqrt(2);
 	minimumSquareSide = (0.01*numberOfNodes)*maximumCommunicationDistance/std::sqrt(2);
 
