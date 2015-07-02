@@ -112,6 +112,9 @@ Agent INVALID_AGENT;
 //INVALID_AGENT.identification = 0;
 //INVALID_AGENT.type = IV;
 
+Agent GENERIC_COGNITIVE_AGENT;
+Agent GENERIC_LICENSED_AGENT;
+
 struct AgentList
 {
    std::vector < Agent > cognitiveClients;
@@ -368,8 +371,8 @@ void loadLicensedQueue(std::string fileName, std::streampos & filePosition, Lice
    file.close();
 }
 
-/*Cognitive Queue file structure
-INTERVAL TRANSMITTER RECEIVER CHANNEL
+/*Cognitive Request Queue file structure
+INTERVAL TRANSMITTER RECEIVER DELTA_INTERVAL THROUGHPUT
 */
 void loadCognitiveRequestQueue(std::string fileName, std::streampos & filePosition, CognitiveRequestQueue & cognitiveRequestQueue, AgentList & agentList, unsigned long long int interval)
 {
@@ -615,6 +618,37 @@ char * writeCognitiveSuccessQueue(key_t memoryKey, char * sharedMemory, SuccessQ
 }
 
 char * writeCognitiveRequestQueue(key_t memoryKey, char * sharedMemory, CognitiveRequestQueue & cognitiveRequestQueue, unsigned long long int interval)
+{
+   //Shared memory I/O ports
+   std::stringstream writeOn;
+
+   //start tag
+   writeOn << COGNITIVE_REQUEST_QUEUE_PREFIX << START_DATA;
+   writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
+   memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
+   sharedMemory += writeOn.str().size();
+   for (unsigned int cognitiveRequestIndex = 0; cognitiveRequestIndex < cognitiveRequestQueue.request.size() and interval == cognitiveRequestQueue.request.at(cognitiveRequestIndex).interval; cognitiveRequestIndex++)
+   {
+      //Write on the shared memory segment 24 bytes (TAG_SIZE)
+      writeOn.str("");
+      writeOn << std::setw(INTERVAL_SIZE) << std::setfill(BINARY_FILLER) << std::right << intToByte(cognitiveRequestQueue.request.at(cognitiveRequestIndex).interval);
+      writeOn << AgentTypeChar[cognitiveRequestQueue.request.at(cognitiveRequestIndex).transmitter->type];
+      writeOn << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << cognitiveRequestQueue.request.at(cognitiveRequestIndex).transmitter->identification;
+      writeOn << AgentTypeChar[cognitiveRequestQueue.request.at(cognitiveRequestIndex).receiver->type];
+      writeOn << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << cognitiveRequestQueue.request.at(cognitiveRequestIndex).receiver->identification;
+      writeOn << std::setw(DELTA_INTERVAL_SIZE) << std::setfill(BINARY_FILLER) << std::right << intToByte(cognitiveRequestQueue.request.at(cognitiveRequestIndex).deltaInterval);
+      writeOn << std::setw(THROUGHPUT_SIZE) << std::setfill(BINARY_FILLER) << std::right << intToByte(cognitiveRequestQueue.request.at(cognitiveRequestIndex).minimumThroughput);
+      memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
+      sharedMemory += writeOn.str().size();
+   }
+   //end tag
+   writeOn << COGNITIVE_REQUEST_QUEUE_PREFIX << END_DATA;
+   writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
+   memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
+   return sharedMemory;
+}
+
+char * saveCognitiveRequestQueue(key_t memoryKey, char * sharedMemory, CognitiveRequestQueue & cognitiveRequestQueue, unsigned long long int interval)
 {
    //Shared memory I/O ports
    std::stringstream writeOn;
@@ -946,7 +980,8 @@ void sensoringQueueCalculus(AgentList * agentList, SensoringQueue & sensoringQue
       {
          //Cognitive network
          maximumRiskValue = 0;
-         maximumRiskAgent = & INVALID_AGENT;
+         GENERIC_COGNITIVE_AGENT.type = CA;
+         maximumRiskAgent = & GENERIC_COGNITIVE_AGENT;
          for (unsigned int cognitiveEventIndex = 0; cognitiveEventIndex < cognitiveQueue.events.size() and interval == cognitiveQueue.events.at(cognitiveEventIndex).interval; cognitiveEventIndex++)
          {
             transmitter = cognitiveQueue.events.at(cognitiveEventIndex).transmitter;
@@ -978,7 +1013,8 @@ void sensoringQueueCalculus(AgentList * agentList, SensoringQueue & sensoringQue
 
          //Licensed network
          maximumRiskValue = 0;
-         maximumRiskAgent = & INVALID_AGENT;
+         GENERIC_LICENSED_AGENT.type = AT;
+         maximumRiskAgent = & GENERIC_LICENSED_AGENT;
          for (unsigned int licensedEventIndex = 0; licensedEventIndex < licensedQueue.events.size() and interval == licensedQueue.events.at(licensedEventIndex).interval; licensedEventIndex++)
          {
             transmitter = licensedQueue.events.at(licensedEventIndex).transmitter;
