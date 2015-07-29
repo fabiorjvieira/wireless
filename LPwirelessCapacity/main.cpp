@@ -30,7 +30,8 @@ b- O grafo G possui os mesmo vertices do multigrafo Gm, correto?
 c- Qual dos matching incluido em C é a resposta que queremos?
 d- a resposta nao seriam os pesos da saida o programa linear da ultima rodada?
 */
-#include <main.hpp>
+
+#include "main.hpp"
 
 int main(int nargs, char * args[])
 {

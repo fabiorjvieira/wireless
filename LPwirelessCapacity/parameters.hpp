@@ -28,7 +28,7 @@ struct Position
 	float x, y, z;
 };
 
-float euclideanDistance(Position positionA, Position positionB)
+float euclideanDistance(const Position positionA, const Position positionB)
 {
 	float x = (positionA.x - positionB.x);
 	float y = (positionA.y - positionB.y);

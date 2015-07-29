@@ -16,9 +16,11 @@
 #include <sstream>
 #include <vector>
 #include <math.h>
+#include <unordered_map>
 
-#include <network.hpp>
-#include <constants.hpp>
-#include <parameters.hpp>
+#include "network.hpp"
+#include "constants.hpp"
+#include "parameters.hpp"
+#include "graph.hpp"
 
 #endif /* MAIN_HPP_ */
