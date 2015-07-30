@@ -31,27 +31,55 @@ c- Qual dos matching incluido em C é a resposta que queremos?
 d- a resposta nao seriam os pesos da saida o programa linear da ultima rodada?
 */
 
-#include "main.hpp"
+#include "graph.hpp"
 
 int main(int nargs, char * args[])
 {
 	int result = 0;
 	Network * network;
 	WeightGraph * weightGraph;
-	std::vector < unsigned int > * linkIdentifications = new std::vector < unsigned int >;
+	std::vector < LinkIdentification > * linkIdentifications = new std::vector < LinkIdentification >;
+	std::vector < LinkIdentification > sortedLinkIdentifications, mOKlinkIdentifications;
 	bool mOK;
 
 	loadParameters(args);
 	network = new Network(args[6], args[7]);
 	weightGraph = new WeightGraph(network);
 
-	//loop vava
+	//loop vava begins
 
 	weightGraph->MaxWeightedMatching(*linkIdentifications);
 	mOK = true;
 	for (unsigned int linkIdentificationIndex = 0; linkIdentificationIndex < linkIdentifications->size() and mOK; linkIdentificationIndex++)
-		mOK = (network->snr(linkIdentifications->at(linkIdentificationIndex), linkIdentifications) >= SNRthreshold);
-	//loop vava
+		mOK = (Network::snr(linkIdentifications->at(linkIdentificationIndex), linkIdentifications) >= SNRthreshold);
+
+	//declare D and C sets
+	//solve the linear program and get the weights
+
+	if (not mOK)
+	{
+		//???optimization insert sort
+		sortedLinkIdentifications = (*linkIdentifications);
+		std::sort(sortedLinkIdentifications.begin(), sortedLinkIdentifications.end());
+
+		//try to remove the first ones and test
+		//???optimization make LinkIdentification a pointer class
+		mOKlinkIdentifications = sortedLinkIdentifications;
+		while (not mOK)
+		{
+			//???optimization std::vector to std::list (must see if specialized std::sort works with lists)
+			mOKlinkIdentifications.erase(mOKlinkIdentifications.begin());
+		}
+
+		//try to remove the last ones and test
+		mOKlinkIdentifications = sortedLinkIdentifications;
+		while (not mOK)
+		{
+			mOKlinkIdentifications.pop_back();
+		}
+	}
+
+	//loop vava ends
 
 	return result;
 }

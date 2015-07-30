@@ -8,13 +8,13 @@
 #ifndef PARAMETERS_HPP_
 #define PARAMETERS_HPP_
 
-float PathLossExponent = 2;
-float MinimumDistance = 20;
-float SNRthreshold = 1;
-float BandWidth = 20e+6;
-float TransmissionPower = 100e-3;
+static float PathLossExponent = 2;
+static float MinimumDistance = 20;
+static float SNRthreshold = 1;
+static float BandWidth = 20e+6;
+static float TransmissionPower = 100e-3;
 
-void loadParameters(char * args[])
+static void loadParameters(char * args[])
 {
 	PathLossExponent = atof(args[1]);
 	MinimumDistance = atof(args[2]);
@@ -28,7 +28,7 @@ struct Position
 	float x, y, z;
 };
 
-float euclideanDistance(const Position positionA, const Position positionB)
+static float euclideanDistance(const Position positionA, const Position positionB)
 {
 	float x = (positionA.x - positionB.x);
 	float y = (positionA.y - positionB.y);

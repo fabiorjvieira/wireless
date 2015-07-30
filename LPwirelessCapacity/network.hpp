@@ -8,6 +8,14 @@
 #ifndef NETWORK_HPP_
 #define NETWORK_HPP_
 
+#include <string>
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <limits>
+#include <math.h>
+
 #include "parameters.hpp"
 #include "constants.hpp"
 
@@ -79,94 +87,46 @@ public:
 	}
 };
 
+class Link;
+
+class LinkIdentification
+{
+private:
+	unsigned int identification;
+	Link * link;
+
+public:
+	LinkIdentification();
+	unsigned int getIdentification();
+	Link * getLink();
+	void set(unsigned int identification, Link * link);
+	bool operator < (const LinkIdentification & id) const;
+	bool operator > (const LinkIdentification & id) const;
+	bool operator >= (const LinkIdentification & id) const;
+	bool operator <= (const LinkIdentification & id) const;
+	bool operator == (const LinkIdentification & id) const;
+	bool operator != (const LinkIdentification & id) const;
+	LinkIdentification & operator = (const LinkIdentification & id);
+};
+
 class Link
 {
 private:
 	Node * origin;
 	Node * destination;
-	unsigned int identification;
+	LinkIdentification identification;
 	float size;
 	float weight;
 
 public:
-	Link(Node * origin, Node * destination, unsigned int identification)
-	{
-		if (euclideanDistance(origin->getPosition(), destination->getPosition()) <= MinimumDistance)
-		{
-			this->origin = origin;
-			this->destination = destination;
-			this->identification = identification;
-			this->size = euclideanDistance(this->origin->getPosition(), this->destination->getPosition());
-			this->weight = 0;
-		}
-		else std::cerr << NOT_A_LINK << origin->getIdentification() << LINK << destination->getIdentification();
-	}
-
-	Node * getOrigin()
-	{
-		return this->origin;
-	}
-
-	void updateWeight(float weight)
-	{
-		this->weight = weight;
-	}
-
-	Node * getDestination()
-	{
-		return this->destination;
-	}
-
-	float getSize()
-	{
-		return this->size;
-	}
-
-	float getWeight()
-	{
-		return this->weight;
-	}
-
-	unsigned int getIdentification()
-	{
-		return this->identification;
-	}
-
-	static std::vector < Link * > * loadLinks(std::string linkFile, std::vector < Node * > * nodes)
-	{
-		std::ifstream inFile;
-		std::vector < Link * > * links = new std::vector < Link * >;
-		Link * link;
-		unsigned int originIndetification, destinationIndetification;
-		std::stringstream endOfLine;
-		unsigned int fileLine = 0;
-		endOfLine << std::endl;
-
-		try{
-			inFile.open(linkFile.data(), std::ifstream::in);
-			if (!inFile.is_open()){
-				throw std::exception();
-			}
-
-			inFile >> originIndetification;
-			inFile >> destinationIndetification;
-			do{
-				link = new Link(nodes->at(originIndetification), nodes->at(destinationIndetification), fileLine++);
-				links->push_back(link);
-
-				//ignore the other fields until the end of the current line.
-				inFile.ignore(std::numeric_limits<std::streamsize>::max(), endOfLine.str().data()[0]);
-				inFile >> originIndetification;
-				inFile >> destinationIndetification;
-			}while (!inFile.eof());
-			inFile.close();
-
-		}catch(std::exception &){
-			std::cerr << FILE_NOT_FOUND << linkFile << std::endl;
-		}
-
-		return links;
-	}
+	Link(Node * origin, Node * destination, unsigned int identification);
+	Node * getOrigin();
+	void updateWeight(float weight);
+	Node * getDestination();
+	float getSize();
+	float getWeight();
+	LinkIdentification & getIdentification();
+	static std::vector < Link * > * loadLinks(std::string linkFile, std::vector < Node * > * nodes);
 };
 
 class Network
@@ -192,21 +152,21 @@ public:
 		return this->links;
 	}
 
-	float snr(unsigned int linkIdentification, std::vector < unsigned int > * linkIdentifications)
+	static float snr(LinkIdentification linkIdentification, std::vector < LinkIdentification > * linkIdentifications)
 	{
 		Node * noiseOrigin;
-		Node * destination = this->links->at(linkIdentification)->getDestination();
+		Node * destination = linkIdentification.getLink()->getDestination();
 		float snr = 0;
 		float equivalentNoise = (Network::noiseFloor() / TransmissionPower);
 
 		for (unsigned int noiseIndex = 0; noiseIndex < linkIdentifications->size(); noiseIndex++)
 		{
 			//attention! linkIdentification is included in linkIdentifications, so euclideanDistance = 0 when noiseLinkIdentifications.at(noiseIndex) == linkIdentification.
-			if (linkIdentifications->at(noiseIndex) == linkIdentification) continue;
-			noiseOrigin = this->links->at(linkIdentifications->at(noiseIndex))->getOrigin();
+			if (linkIdentifications->at(noiseIndex).getIdentification() == linkIdentification.getIdentification()) continue;
+			noiseOrigin = linkIdentifications->at(noiseIndex).getLink()->getOrigin();
 			snr += 1 / pow(euclideanDistance(destination->getPosition(), noiseOrigin->getPosition()), PathLossExponent);
 		}
-		snr = (1/pow(this->links->at(linkIdentification)->getSize(),PathLossExponent)) / (equivalentNoise + snr);
+		snr = (1/pow(linkIdentification.getLink()->getSize(),PathLossExponent)) / (equivalentNoise + snr);
 
 		return snr;
 	}

@@ -10,6 +10,9 @@
 
 #include <lemon/list_graph.h>
 #include <lemon/matching.h>
+#include <unordered_map>
+
+#include "network.hpp"
 
 class WeightEdgePair
 {
@@ -137,7 +140,7 @@ public:
 		this->updateLemonWeights();
 	}
 
-	void MaxWeightedMatching(std::vector < unsigned int > & linkIdentifications)
+	void MaxWeightedMatching(std::vector < LinkIdentification > & linkIdentifications)
 	{
 		linkIdentifications.clear();
 		this->updateLemonWeights();
@@ -145,6 +148,7 @@ public:
 		maxWeightedMatching.run();
 		for (std::unordered_map < lemon::ListGraph::Edge *, WeightEdgePair * >::iterator mapIndex = this->lemonEdges.begin(); mapIndex != this->lemonEdges.end(); mapIndex++)
 			if (maxWeightedMatching.matching((*mapIndex->first)))
+				//???optimization insert sort
 				linkIdentifications.push_back(this->lemonEdgeLinkMap[mapIndex->first]->getIdentification());
 	}
 };
