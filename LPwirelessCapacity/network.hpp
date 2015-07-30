@@ -192,18 +192,18 @@ public:
 		return this->links;
 	}
 
-	float snr(unsigned int linkIdentification, std::vector < unsigned int > & noiseLinkIdentifications)
+	float snr(unsigned int linkIdentification, std::vector < unsigned int > * linkIdentifications)
 	{
 		Node * noiseOrigin;
 		Node * destination = this->links->at(linkIdentification)->getDestination();
 		float snr = 0;
 		float equivalentNoise = (Network::noiseFloor() / TransmissionPower);
 
-		for (unsigned int noiseIndex = 0; noiseIndex < noiseLinkIdentifications.size(); noiseIndex++)
+		for (unsigned int noiseIndex = 0; noiseIndex < linkIdentifications->size(); noiseIndex++)
 		{
-			//attention! linkIdentification is included in noiseLinkIdentifications, so euclideanDistance = 0 when noiseLinkIdentifications.at(noiseIndex) == linkIdentification.
-			if (noiseLinkIdentifications.at(noiseIndex) == linkIdentification) continue;
-			noiseOrigin = this->links->at(noiseLinkIdentifications.at(noiseIndex))->getOrigin();
+			//attention! linkIdentification is included in linkIdentifications, so euclideanDistance = 0 when noiseLinkIdentifications.at(noiseIndex) == linkIdentification.
+			if (linkIdentifications->at(noiseIndex) == linkIdentification) continue;
+			noiseOrigin = this->links->at(linkIdentifications->at(noiseIndex))->getOrigin();
 			snr += 1 / pow(euclideanDistance(destination->getPosition(), noiseOrigin->getPosition()), PathLossExponent);
 		}
 		snr = (1/pow(this->links->at(linkIdentification)->getSize(),PathLossExponent)) / (equivalentNoise + snr);

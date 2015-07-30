@@ -9,6 +9,7 @@
 #define GRAPH_HPP_
 
 #include <lemon/list_graph.h>
+#include <lemon/matching.h>
 
 class WeightEdgePair
 {
@@ -58,54 +59,93 @@ public:
 class WeightGraph
 {
 private:
-	std::vector < lemon::ListGraph::Node > lemonNodes;
-	//std::vector < lemon::ListGraph::Edge > lemonEdges;
-	lemon::ListGraph::EdgeMap < float > * lemonWeightEdges;
-	lemon::ListGraph lemonUndirectedGraph;
-	std::unordered_map < std::string, WeightEdgePair * > weightEdgePairs;
-	std::unordered_map < lemon::ListGraph::Edge, unsigned int > lemonEdges;
+	lemon::ListGraph * lemonUndirectedGraph;
+	std::vector < lemon::ListGraph::Node * > lemonNodes;
+	std::unordered_map < lemon::ListGraph::Edge *, WeightEdgePair * > lemonEdges; //maps lemon Edge to WeightEdgePair
+	std::unordered_map < lemon::ListGraph::Edge *, Link * > lemonEdgeLinkMap; //maps lemon Edge to Link
+	lemon::ListGraph::EdgeMap < float > * lemonWeightEdgesMap;
+	std::unordered_map < std::string, WeightEdgePair * > weightEdgePairs; //maps a pair of Node::identification (WeightGraph::mapKey) to WeightEdgePair
 
-public:
-	WeightGraph(Network * network)
+protected:
+	void initLemonNodes(Network * network)
 	{
-		unsigned int originIdentification, destinationIdentification;
-		std::stringstream key;
-		lemon::ListGraph::Edge lemonEdge;
+		//init lemon nodes
 		std::vector < Node * > * nodes = network->getNodes();
-		std::vector < Link * > * links = network->getLinks();
-
+		lemon::ListGraph::Node * lemonNode;
 		for (unsigned int nodeIndex = 0; nodeIndex < nodes->size(); nodeIndex++)
-			this->lemonNodes.push_back(this->lemonUndirectedGraph.addNode());
+		{
+			lemonNode = new lemon::ListGraph::Node;
+			(*lemonNode) = this->lemonUndirectedGraph->addNode();
+			this->lemonNodes.push_back(lemonNode);
+		}
+	}
 
+	void initWeightEdgePairs(Network * network)
+	{
+		//init map of weight edge pairs
+		std::stringstream key;
+		std::vector < Link * > * links = network->getLinks();
 		for (unsigned int linkIndex = 0; linkIndex < links->size(); linkIndex++)
 		{
-			mapKey(links->at(linkIndex)->getOrigin(), links->at(linkIndex)->getDestination(), key);
+			WeightGraph::mapKey(links->at(linkIndex)->getOrigin(), links->at(linkIndex)->getDestination(), key);
 			if (this->weightEdgePairs.count(key.str()) == 0)
 				this->weightEdgePairs[key.str()] = new WeightEdgePair(links->at(linkIndex));
 			else this->weightEdgePairs[key.str()]->update(links->at(linkIndex));
 		}
+	}
 
-		for (auto mapIndex = this->weightEdgePairs.begin(); mapIndex != this->weightEdgePairs.end(); mapIndex++)
+	void initLemonEdges()
+	{
+		//init map of lemon edges
+		unsigned int originIdentification, destinationIdentification;
+		lemon::ListGraph::Edge * lemonEdge;
+		for (std::unordered_map < std::string, WeightEdgePair * >::iterator mapIndex = this->weightEdgePairs.begin(); mapIndex != this->weightEdgePairs.end(); mapIndex++)
 		{
 			originIdentification = mapIndex->second->getUpLink()->getOrigin()->getIdentification();
 			destinationIdentification = mapIndex->second->getUpLink()->getDestination()->getIdentification();
-			lemonEdge = this->lemonUndirectedGraph.addEdge(this->lemonNodes.at(originIdentification), this->lemonNodes.at(destinationIdentification));
-			this->lemonEdges[lemonEdge] = mapIndex->second->getUpLink()->getIdentification();
-		}
-
-		this->lemonWeightEdges =  new lemon::ListGraph::EdgeMap(this->lemonUndirectedGraph);
-		for (auto mapIndex = this->lemonEdges.begin(); mapIndex != this->lemonEdges.end(); mapIndex++)
-		{
-			lemonEdge = mapIndex->second;
-			(*this->lemonWeightEdges)[lemonEdges] = 0;
+			lemonEdge = new lemon::ListGraph::Edge;
+			(*lemonEdge) = this->lemonUndirectedGraph->addEdge((*this->lemonNodes.at(originIdentification)), (*this->lemonNodes.at(destinationIdentification)));
+			this->lemonEdges[lemonEdge] = mapIndex->second;
 		}
 	}
 
-	void mapKey(Node * origin, Node * destination, std::stringstream & key)
+	void updateLemonWeights()
+	{
+		//update lemon edge weights
+		for (std::unordered_map < lemon::ListGraph::Edge *, WeightEdgePair * >::iterator mapIndex = this->lemonEdges.begin(); mapIndex != this->lemonEdges.end(); mapIndex++)
+		{
+			this->lemonEdgeLinkMap[mapIndex->first] = mapIndex->second->getWeightedLink();
+			this->lemonWeightEdgesMap->set((*(mapIndex->first)), mapIndex->second->getWeightedLink()->getWeight());
+		}
+	}
+
+	static void mapKey(Node * origin, Node * destination, std::stringstream & key)
 	{
 		key.str("");
 		if (origin->getIdentification() < destination->getIdentification()) key << origin->getIdentification() << SEPARATOR << destination->getIdentification();
 		else key << destination->getIdentification() << SEPARATOR << origin->getIdentification();
+	}
+
+public:
+	WeightGraph(Network * network)
+	{
+		this->lemonUndirectedGraph = new lemon::ListGraph();
+		this->initLemonNodes(network);
+		this->initWeightEdgePairs(network);
+		this->initLemonEdges();
+		this->lemonWeightEdgesMap =  new lemon::ListGraph::EdgeMap < float > ((*this->lemonUndirectedGraph));
+		this->updateLemonWeights();
+	}
+
+	void MaxWeightedMatching(std::vector < unsigned int > & linkIdentifications)
+	{
+		linkIdentifications.clear();
+		this->updateLemonWeights();
+		lemon::MaxWeightedMatching < lemon::ListGraph, lemon::ListGraph::EdgeMap < float > > maxWeightedMatching((*lemonUndirectedGraph), (*lemonWeightEdgesMap));
+		maxWeightedMatching.run();
+		for (std::unordered_map < lemon::ListGraph::Edge *, WeightEdgePair * >::iterator mapIndex = this->lemonEdges.begin(); mapIndex != this->lemonEdges.end(); mapIndex++)
+			if (maxWeightedMatching.matching((*mapIndex->first)))
+				linkIdentifications.push_back(this->lemonEdgeLinkMap[mapIndex->first]->getIdentification());
 	}
 };
 

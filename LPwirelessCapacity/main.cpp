@@ -37,9 +37,21 @@ int main(int nargs, char * args[])
 {
 	int result = 0;
 	Network * network;
+	WeightGraph * weightGraph;
+	std::vector < unsigned int > * linkIdentifications = new std::vector < unsigned int >;
+	bool mOK;
 
 	loadParameters(args);
 	network = new Network(args[6], args[7]);
+	weightGraph = new WeightGraph(network);
+
+	//loop vava
+
+	weightGraph->MaxWeightedMatching(*linkIdentifications);
+	mOK = true;
+	for (unsigned int linkIdentificationIndex = 0; linkIdentificationIndex < linkIdentifications->size() and mOK; linkIdentificationIndex++)
+		mOK = (network->snr(linkIdentifications->at(linkIdentificationIndex), linkIdentifications) >= SNRthreshold);
+	//loop vava
 
 	return result;
 }
