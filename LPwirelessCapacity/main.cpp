@@ -46,7 +46,7 @@ int main(int nargs, char * args[])
 	int result = 0;
 	Network * network;
 	WeightGraph * weightGraph;
-	std::vector < LinkIdentification > * linkIdentifications = new std::vector < LinkIdentification >;
+	std::vector < LinkIdentification > * linkIdentifications;
 	std::vector < LinkIdentification > sortedLinkIdentifications, mOKlinkIdentifications;
 	bool matchingOK;
 
@@ -56,6 +56,10 @@ int main(int nargs, char * args[])
 
 	//loop vava begins
 
+    //linear program first constraints (one for each linear program variable) (rows)
+    //???optimization problem
+
+	linkIdentifications = new std::vector < LinkIdentification >;
 	weightGraph->MaxWeightedMatching(*linkIdentifications);
 	matchingOK = true;
 	for (unsigned int linkIdentificationIndex = 0; linkIdentificationIndex < linkIdentifications->size() and matchingOK; linkIdentificationIndex++)
