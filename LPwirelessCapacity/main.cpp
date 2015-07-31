@@ -31,7 +31,15 @@ c- Qual dos matching incluido em C é a resposta que queremos?
 d- a resposta nao seriam os pesos da saida o programa linear da ultima rodada?
 */
 
-#include "graph.hpp"
+/*
+--help
+parameters like -nodeFile
+if no link file outputs one by calculating the minimum distance
+missing destructors
+OK - check noise floor with Rezende
+*/
+
+#include "linearprogram.hpp"
 
 int main(int nargs, char * args[])
 {
@@ -40,23 +48,23 @@ int main(int nargs, char * args[])
 	WeightGraph * weightGraph;
 	std::vector < LinkIdentification > * linkIdentifications = new std::vector < LinkIdentification >;
 	std::vector < LinkIdentification > sortedLinkIdentifications, mOKlinkIdentifications;
-	bool mOK;
+	bool matchingOK;
 
 	loadParameters(args);
-	network = new Network(args[6], args[7]);
+	network = new Network(NodeFileName, LinkFileName);
 	weightGraph = new WeightGraph(network);
 
 	//loop vava begins
 
 	weightGraph->MaxWeightedMatching(*linkIdentifications);
-	mOK = true;
-	for (unsigned int linkIdentificationIndex = 0; linkIdentificationIndex < linkIdentifications->size() and mOK; linkIdentificationIndex++)
-		mOK = (Network::snr(linkIdentifications->at(linkIdentificationIndex), linkIdentifications) >= SNRthreshold);
+	matchingOK = true;
+	for (unsigned int linkIdentificationIndex = 0; linkIdentificationIndex < linkIdentifications->size() and matchingOK; linkIdentificationIndex++)
+		matchingOK = (Network::snr(linkIdentifications->at(linkIdentificationIndex), linkIdentifications) >= SNRthreshold);
 
 	//declare D and C sets
 	//solve the linear program and get the weights
 
-	if (not mOK)
+	if (not matchingOK)
 	{
 		//???optimization insert sort
 		sortedLinkIdentifications = (*linkIdentifications);
@@ -65,7 +73,7 @@ int main(int nargs, char * args[])
 		//try to remove the first ones and test
 		//???optimization make LinkIdentification a pointer class
 		mOKlinkIdentifications = sortedLinkIdentifications;
-		while (not mOK)
+		while (not matchingOK)
 		{
 			//???optimization std::vector to std::list (must see if specialized std::sort works with lists)
 			mOKlinkIdentifications.erase(mOKlinkIdentifications.begin());
@@ -73,7 +81,7 @@ int main(int nargs, char * args[])
 
 		//try to remove the last ones and test
 		mOKlinkIdentifications = sortedLinkIdentifications;
-		while (not mOK)
+		while (not matchingOK)
 		{
 			mOKlinkIdentifications.pop_back();
 		}

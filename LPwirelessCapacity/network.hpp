@@ -89,6 +89,7 @@ public:
 
 class Link;
 
+//needed for std::sort();
 class LinkIdentification
 {
 private:
@@ -125,7 +126,7 @@ public:
 	Node * getDestination();
 	float getSize();
 	float getWeight();
-	LinkIdentification & getIdentification();
+	unsigned int getIdentification();
 	static std::vector < Link * > * loadLinks(std::string linkFile, std::vector < Node * > * nodes);
 };
 
@@ -174,7 +175,7 @@ public:
 	static long double noiseFloor()
 	{
 		long double thermalNoise = BOLTZMANN * REFERENCE_TEMPERATURE * BandWidth;
-		long double noiseFloor = thermalNoise * NOISE_FIGURE; // Noise Figure = perda dentro do receptor não ideal
+		long double noiseFloor = thermalNoise; // * NOISE_FIGURE; // Noise Figure = perda dentro do receptor não ideal
 		return noiseFloor;
 	}
 };

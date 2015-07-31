@@ -8,11 +8,15 @@
 #ifndef PARAMETERS_HPP_
 #define PARAMETERS_HPP_
 
-static float PathLossExponent = 2;
-static float MinimumDistance = 20;
-static float SNRthreshold = 1;
-static float BandWidth = 20e+6;
-static float TransmissionPower = 100e-3;
+static float PathLossExponent = 2; //alpha
+static float SNRthreshold = 1; //beta
+static float MinimumDistance = 20; //meters
+static float BandWidth = 20e+6; //Hertz
+static float TransmissionPower = 100e-3; //Watts
+static float LearningStep = 1e-3;
+
+static std::string NodeFileName = "node.in";
+static std::string LinkFileName = "link.in";
 
 static void loadParameters(char * args[])
 {
@@ -21,6 +25,9 @@ static void loadParameters(char * args[])
 	SNRthreshold = atof(args[3]);
 	BandWidth = atof(args[4]);
 	TransmissionPower = atof(args[5]);
+	TransmissionPower = atof(args[6]);
+	NodeFileName = args[7];
+	LinkFileName = args[8];
 }
 
 struct Position

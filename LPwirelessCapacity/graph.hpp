@@ -153,12 +153,4 @@ public:
 	}
 };
 
-class mapping
-{
-private:
-
-public:
-
-};
-
 #endif /* GRAPH_HPP_ */
