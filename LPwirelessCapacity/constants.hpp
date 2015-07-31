@@ -21,9 +21,11 @@ static const std::string LINEAR_PROGRAM_NAME = "FractionalColoring";
 static const std::string LINEAR_PROGRAM_VARIABLE_PREFIX = "x";
 static const std::string LINEAR_PROGRAM_CONSTRAINT_MOK_PREFIX = "cmok";
 static const std::string LINEAR_PROGRAM_CONSTRAINT_MNOK_PREFIX = "cmnok";
-static const float LINEAR_PROGRAM_NAME_COEFFICIENT = 1.0;
+static const float LINEAR_PROGRAM_VARIABLE_COEFFICIENT = 1.0;
 static const float LINEAR_PROGRAM_LOWER_BOUND = 0.0;
 static const float LINEAR_PROGRAM_UPPER_BOUND = 1.0;
 static const unsigned int LINEAR_PROGRAM_IGNORE = 0;
+static const bool MATCHING_OK = true;
+static const bool MATCHING_NOK = true;
 
 #endif /* CONSTANTS_HPP_ */
