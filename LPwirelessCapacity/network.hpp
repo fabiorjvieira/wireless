@@ -17,7 +17,6 @@
 #include <math.h>
 
 #include "parameters.hpp"
-#include "constants.hpp"
 
 class Node
 {
@@ -127,6 +126,7 @@ public:
 	float getSize();
 	float getWeight();
 	unsigned int getIdentification();
+	LinkIdentification getLinkIdentification();
 	static std::vector < Link * > * loadLinks(std::string linkFile, std::vector < Node * > * nodes);
 };
 
@@ -153,18 +153,18 @@ public:
 		return this->links;
 	}
 
-	static float snr(LinkIdentification linkIdentification, std::vector < LinkIdentification > * linkIdentifications)
+	static float snr(LinkIdentification linkIdentification, std::vector < LinkIdentification > * schedulingLinkIdentifications)
 	{
 		Node * noiseOrigin;
 		Node * destination = linkIdentification.getLink()->getDestination();
 		float snr = 0;
-		float equivalentNoise = (Network::noiseFloor() / TransmissionPower);
+		float equivalentNoise = (NoiseFloor / TransmissionPower);
 
-		for (unsigned int noiseIndex = 0; noiseIndex < linkIdentifications->size(); noiseIndex++)
+		for (unsigned int noiseIndex = 0; noiseIndex < schedulingLinkIdentifications->size(); noiseIndex++)
 		{
 			//attention! linkIdentification is included in linkIdentifications, so euclideanDistance = 0 when noiseLinkIdentifications.at(noiseIndex) == linkIdentification.
-			if (linkIdentifications->at(noiseIndex).getIdentification() == linkIdentification.getIdentification()) continue;
-			noiseOrigin = linkIdentifications->at(noiseIndex).getLink()->getOrigin();
+			if (schedulingLinkIdentifications->at(noiseIndex).getIdentification() == linkIdentification.getIdentification()) continue;
+			noiseOrigin = schedulingLinkIdentifications->at(noiseIndex).getLink()->getOrigin();
 			snr += 1 / pow(euclideanDistance(destination->getPosition(), noiseOrigin->getPosition()), PathLossExponent);
 		}
 		snr = (1/pow(linkIdentification.getLink()->getSize(),PathLossExponent)) / (equivalentNoise + snr);
@@ -172,11 +172,13 @@ public:
 		return snr;
 	}
 
-	static long double noiseFloor()
+	static bool scheduleOK(std::vector < LinkIdentification > * schedulingLinkIdentifications)
 	{
-		long double thermalNoise = BOLTZMANN * REFERENCE_TEMPERATURE * BandWidth;
-		long double noiseFloor = thermalNoise; // * NOISE_FIGURE; // Noise Figure = perda dentro do receptor não ideal
-		return noiseFloor;
+		bool ok = true;
+		for (unsigned int linkIdentificationIndex = 0; linkIdentificationIndex < schedulingLinkIdentifications->size() and ok; linkIdentificationIndex++)
+			ok = (Network::snr(schedulingLinkIdentifications->at(linkIdentificationIndex), schedulingLinkIdentifications) >= SNRthreshold);
+
+		return ok;
 	}
 };
 

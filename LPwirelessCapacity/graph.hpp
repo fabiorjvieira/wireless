@@ -140,16 +140,22 @@ public:
 		this->updateLemonWeights();
 	}
 
-	void MaxWeightedMatching(std::vector < LinkIdentification > & linkIdentifications)
+	float MaxWeightedMatching(std::vector < LinkIdentification > * matchingLinkIdentifications)
 	{
-		linkIdentifications.clear();
+		float weight;
+
+		matchingLinkIdentifications->clear();
 		this->updateLemonWeights();
 		lemon::MaxWeightedMatching < lemon::ListGraph, lemon::ListGraph::EdgeMap < float > > maxWeightedMatching((*lemonUndirectedGraph), (*lemonWeightEdgesMap));
 		maxWeightedMatching.run();
+		weight = maxWeightedMatching.matchingWeight();
+
 		for (std::unordered_map < lemon::ListGraph::Edge *, WeightEdgePair * >::iterator mapIndex = this->lemonEdges.begin(); mapIndex != this->lemonEdges.end(); mapIndex++)
 			if (maxWeightedMatching.matching((*mapIndex->first)))
 				//???optimization insert sort
-				linkIdentifications.push_back(this->lemonEdgeLinkMap[mapIndex->first]->getIdentification());
+				matchingLinkIdentifications->push_back(this->lemonEdgeLinkMap[mapIndex->first]->getLinkIdentification());
+
+		return weight;
 	}
 };
 

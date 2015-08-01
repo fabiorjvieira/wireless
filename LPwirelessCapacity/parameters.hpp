@@ -8,11 +8,16 @@
 #ifndef PARAMETERS_HPP_
 #define PARAMETERS_HPP_
 
+#include "constants.hpp"
+
 static float PathLossExponent = 2; //alpha
 static float SNRthreshold = 1; //beta
 static float MinimumDistance = 20; //meters
 static float BandWidth = 20e+6; //Hertz
 static float TransmissionPower = 100e-3; //Watts
+static float ThermalNoise = BOLTZMANN * REFERENCE_TEMPERATURE * BandWidth;
+static float NoiseFloor = ThermalNoise; // * NOISE_FIGURE; // Noise Figure = perda dentro do receptor não ideal
+
 static float LearningStep = 1e-3;
 
 static std::string NodeFileName = "node.in";
@@ -21,13 +26,16 @@ static std::string LinkFileName = "link.in";
 static void loadParameters(char * args[])
 {
 	PathLossExponent = atof(args[1]);
-	MinimumDistance = atof(args[2]);
-	SNRthreshold = atof(args[3]);
+	SNRthreshold = atof(args[2]);
+	MinimumDistance = atof(args[3]);
 	BandWidth = atof(args[4]);
 	TransmissionPower = atof(args[5]);
-	TransmissionPower = atof(args[6]);
-	NodeFileName = args[7];
-	LinkFileName = args[8];
+	ThermalNoise = atof(args[6]);
+	NoiseFloor = atof(args[7]);
+	LearningStep = atof(args[8]);
+
+	NodeFileName = args[9];
+	LinkFileName = args[10];
 }
 
 struct Position

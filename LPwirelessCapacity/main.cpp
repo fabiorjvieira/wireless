@@ -46,51 +46,63 @@ int main(int nargs, char * args[])
 	int result = 0;
 	Network * network;
 	WeightGraph * weightGraph;
-	std::vector < LinkIdentification > * linkIdentifications;
-	std::vector < LinkIdentification > sortedLinkIdentifications, mOKlinkIdentifications;
-	bool matchingOK;
+	std::vector < LinkIdentification > * matchingLinkIdentifications;
+	LinearProgram * linearProgram;
+	std::vector < LinkIdentification > backupMatchingLinkIdentifications;
+	std::vector < float > linkWeightsHistory;
+	bool matchingOK, ok;
+	float matchingWeight;
 
 	loadParameters(args);
 	network = new Network(NodeFileName, LinkFileName);
 	weightGraph = new WeightGraph(network);
+	linearProgram = new LinearProgram(network->getLinks());
 
 	//loop vava begins
-
-    //linear program first constraints (one for each linear program variable) (rows)
-    //???optimization problem
-
-	linkIdentifications = new std::vector < LinkIdentification >;
-	weightGraph->MaxWeightedMatching(*linkIdentifications);
-	matchingOK = true;
-	for (unsigned int linkIdentificationIndex = 0; linkIdentificationIndex < linkIdentifications->size() and matchingOK; linkIdentificationIndex++)
-		matchingOK = (Network::snr(linkIdentifications->at(linkIdentificationIndex), linkIdentifications) >= SNRthreshold);
-
-	//declare D and C sets
-	//solve the linear program and get the weights
-
-	if (not matchingOK)
+	do
 	{
-		//???optimization insert sort
-		sortedLinkIdentifications = (*linkIdentifications);
-		std::sort(sortedLinkIdentifications.begin(), sortedLinkIdentifications.end());
+		linearProgram->updateStep();
+		//init MOK done in LinearProgram constructor
+		linearProgram->clearLinkMatchingNotOK();
+		ok = false;
 
-		//try to remove the first ones and test
-		//???optimization make LinkIdentification a pointer class
-		mOKlinkIdentifications = sortedLinkIdentifications;
-		while (not matchingOK)
+		do
 		{
-			//???optimization std::vector to std::list (must see if specialized std::sort works with lists)
-			mOKlinkIdentifications.erase(mOKlinkIdentifications.begin());
-		}
+			linearProgram->solve(linkWeightsHistory);
+			matchingLinkIdentifications = new std::vector < LinkIdentification >;
+			matchingWeight = weightGraph->MaxWeightedMatching(matchingLinkIdentifications);
+			matchingOK = Network::scheduleOK(matchingLinkIdentifications);
 
-		//try to remove the last ones and test
-		mOKlinkIdentifications = sortedLinkIdentifications;
-		while (not matchingOK)
-		{
-			mOKlinkIdentifications.pop_back();
+			if (matchingWeight <= 1) ok = true;
+			else if (matchingWeight > linearProgram->getConstraintsMatchingNotOKupperBound() and not matchingOK)
+				linearProgram->addLinkMatching(LINEAR_PROGRAM_MATCHING_NOK, matchingLinkIdentifications);
+			else if (matchingWeight > 1 and matchingOK)
+				linearProgram->addLinkMatching(LINEAR_PROGRAM_MATCHING_OK, matchingLinkIdentifications);
+			else if (matchingWeight > 1 and matchingWeight <= linearProgram->getConstraintsMatchingNotOKupperBound() and not matchingOK)
+			{
+				backupMatchingLinkIdentifications = (*matchingLinkIdentifications);
+				//???optimization insert sort while insert in matchingLinkIdentifications
+				//sort in a non-decreasing order of weights
+				std::sort(matchingLinkIdentifications->rbegin(), matchingLinkIdentifications->rend());
+
+				//heuristics
+				//try to remove the less weighted link (the last ones) and test
+				while (not matchingOK)
+				{
+					matchingWeight -= matchingLinkIdentifications->front().getLink()->getWeight();
+					if (matchingWeight < 1) break;
+					matchingLinkIdentifications->erase(matchingLinkIdentifications->begin());
+					matchingOK = Network::scheduleOK(matchingLinkIdentifications);
+				}
+
+				if (not matchingOK) ok = true;
+				else linearProgram->addLinkMatching(LINEAR_PROGRAM_MATCHING_OK, matchingLinkIdentifications);
+			}
+			else std::cerr << "Xiii..." << std::endl;
 		}
+		while (not ok);
 	}
-
+	while (not linearProgram->emptyLinkMatchingNotOK());
 	//loop vava ends
 
 	return result;

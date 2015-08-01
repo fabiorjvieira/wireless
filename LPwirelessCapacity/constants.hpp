@@ -25,7 +25,7 @@ static const float LINEAR_PROGRAM_VARIABLE_COEFFICIENT = 1.0;
 static const float LINEAR_PROGRAM_LOWER_BOUND = 0.0;
 static const float LINEAR_PROGRAM_UPPER_BOUND = 1.0;
 static const unsigned int LINEAR_PROGRAM_IGNORE = 0;
-static const bool MATCHING_OK = true;
-static const bool MATCHING_NOK = true;
+static const bool LINEAR_PROGRAM_MATCHING_OK = true;
+static const bool LINEAR_PROGRAM_MATCHING_NOK = true;
 
 #endif /* CONSTANTS_HPP_ */
