@@ -53,7 +53,7 @@ int main(int nargs, char * args[])
 	bool matchingOK, ok;
 	float matchingWeight;
 
-	loadParameters(args);
+	loadParameters(nargs, args);
 	network = new Network(NodeFileName, LinkFileName);
 	weightGraph = new WeightGraph(network);
 	linearProgram = new LinearProgram(network->getLinks());
@@ -72,6 +72,13 @@ int main(int nargs, char * args[])
 			matchingLinkIdentifications = new std::vector < LinkIdentification >;
 			matchingWeight = weightGraph->MaxWeightedMatching(matchingLinkIdentifications);
 			matchingOK = Network::scheduleOK(matchingLinkIdentifications);
+
+			/*debug*/
+			std::cout << std::endl << "MWM" << std::endl;
+			for (unsigned int linkIndex = 0; linkIndex < matchingLinkIdentifications->size(); linkIndex++)
+				std::cout << matchingLinkIdentifications->at(linkIndex).getIdentification() << " " << std::endl;
+			std::cout << std::endl;
+			/*debug*/
 
 			if (matchingWeight <= 1) ok = true;
 			else if (matchingWeight > linearProgram->getConstraintsMatchingNotOKupperBound() and not matchingOK)
@@ -104,6 +111,19 @@ int main(int nargs, char * args[])
 	}
 	while (not linearProgram->emptyLinkMatchingNotOK());
 	//loop vava ends
+
+	std::cout << std::endl << "Solutions" << std::endl;
+	std::cout << "z";
+	for (unsigned int solutionIndex = 0; solutionIndex < linkWeightsHistory.size(); solutionIndex++)
+	{
+		std::cout << " l" << solutionIndex;
+		if (solutionIndex % (network->getLinks()->size() +1) == 0) std::cout << std::endl;
+	}
+	for (unsigned int solutionIndex = 0; solutionIndex < linkWeightsHistory.size(); solutionIndex++)
+	{
+		std::cout << linkWeightsHistory.at(solutionIndex) ;
+		if (solutionIndex % (network->getLinks()->size() +1) == 0) std::cout << std::endl;
+	}
 
 	return result;
 }

@@ -61,11 +61,10 @@ public:
 
 		Position position;
 
-		try{
+		try
+		{
 			inFile.open(nodeFile.data(), std::ifstream::in);
-			if (!inFile.is_open()){
-				throw std::exception();
-			}
+			if (!inFile.is_open()) throw std::exception();
 
 			Node::loadPosition(inFile, position);
 			do{
@@ -78,8 +77,11 @@ public:
 			}while (!inFile.eof());
 			inFile.close();
 
-		}catch(std::exception &){
-			std::cerr << FILE_NOT_FOUND << nodeFile << std::endl;
+		}
+		catch(std::exception &)
+		{
+			std::cerr << PARAMETER_NodeFileName << SEPARATOR << FILE_NOT_FOUND << nodeFile << std::endl;
+			exit(0);
 		}
 
 		return nodes;
@@ -140,7 +142,49 @@ public:
 	Network(std::string nodeFile, std::string linkFile)
 	{
 		this->nodes = Node::loadNodes(nodeFile);
+		if (linkFile.empty()) linkFile = cliqueNetwork(nodeFile);
 		this->links = Link::loadLinks(linkFile, this->nodes);
+	}
+
+	std::string cliqueNetwork(std::string nodeFile)
+	{
+		std::ofstream outFile;
+		std::string linkFile = nodeFile + LINK_FILE_TERMINATION;
+
+		try
+		{
+			outFile.open(linkFile.data(), std::ifstream::out);
+			if (!outFile.is_open()) throw std::exception();
+
+			srandom(getRandomSeed());
+
+			for (unsigned int nodeIndexA = 0; nodeIndexA < nodes->size(); nodeIndexA++)
+			{
+				for (unsigned int nodeIndexB = 0; nodeIndexB < nodes->size(); nodeIndexB++)
+				{
+					if (random() % 2 > 0)
+					{
+						outFile << this->nodes->at(nodeIndexA)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexB)->getIdentification() << std::endl;
+						outFile << this->nodes->at(nodeIndexB)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexA)->getIdentification() << std::endl;
+					}
+					else
+					{
+						if (random() % 2 > 0) outFile << this->nodes->at(nodeIndexA)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexB)->getIdentification() << std::endl;
+						else outFile << this->nodes->at(nodeIndexB)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexA)->getIdentification() << std::endl;
+
+					}
+				}
+			}
+			outFile.close();
+
+		}
+		catch(std::exception &)
+		{
+			std::cerr << PARAMETER_LinkFileName << SEPARATOR << FILE_NOT_CREATED << nodeFile << std::endl;
+			exit(0);
+		}
+
+		return linkFile;
 	}
 
 	std::vector < Node * > * getNodes()
