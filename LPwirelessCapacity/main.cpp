@@ -110,7 +110,7 @@ int main(int nargs, char * args[])
             }
 				else linearProgram->addLinkMatching(LINEAR_PROGRAM_MATCHING_OK, matchingLinkIdentifications);
 			}
-			else std::cerr << "Xiii..." << std::endl;
+			else std::cerr << "Xi..." << std::endl;
 		}
 		while (not ok);
 	}
