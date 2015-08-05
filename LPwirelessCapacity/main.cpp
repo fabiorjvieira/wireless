@@ -50,7 +50,7 @@ int main(int nargs, char * args[])
 	LinearProgram * linearProgram;
 	std::vector < LinkIdentification > backupMatchingLinkIdentifications;
 	std::vector < float > linkWeightsHistory;
-	bool matchingOK, ok;
+	bool matchingOK, ok, optimal;
 	float matchingWeight;
 
 	loadParameters(nargs, args);
@@ -68,6 +68,7 @@ int main(int nargs, char * args[])
 
 		do
 		{
+		   optimal = true;
 			linearProgram->solve(linkWeightsHistory);
 			matchingLinkIdentifications = new std::vector < LinkIdentification >;
 			matchingWeight = weightGraph->MaxWeightedMatching(matchingLinkIdentifications);
@@ -102,7 +103,11 @@ int main(int nargs, char * args[])
 					matchingOK = Network::scheduleOK(matchingLinkIdentifications);
 				}
 
-				if (not matchingOK) ok = true;
+				if (not matchingOK)
+            {
+				   optimal = false;
+				   ok = true;
+            }
 				else linearProgram->addLinkMatching(LINEAR_PROGRAM_MATCHING_OK, matchingLinkIdentifications);
 			}
 			else std::cerr << "Xiii..." << std::endl;
@@ -112,7 +117,7 @@ int main(int nargs, char * args[])
 	while (not linearProgram->emptyLinkMatchingNotOK());
 	//loop vava ends
 
-	std::cout << std::endl << "Solutions" << std::endl;
+	std::cout << std::endl << "Optimal solutions (" << optimal << ")" << std::endl;
 	std::cout << "z";
 	for (unsigned int solutionIndex = 0; solutionIndex < linkWeightsHistory.size(); solutionIndex++)
 	{

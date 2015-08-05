@@ -162,17 +162,20 @@ public:
 			{
 				for (unsigned int nodeIndexB = 0; nodeIndexB < nodes->size(); nodeIndexB++)
 				{
-					if (random() % 2 > 0)
-					{
-						outFile << this->nodes->at(nodeIndexA)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexB)->getIdentification() << std::endl;
-						outFile << this->nodes->at(nodeIndexB)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexA)->getIdentification() << std::endl;
-					}
-					else
-					{
-						if (random() % 2 > 0) outFile << this->nodes->at(nodeIndexA)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexB)->getIdentification() << std::endl;
-						else outFile << this->nodes->at(nodeIndexB)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexA)->getIdentification() << std::endl;
+               if (euclideanDistance(this->nodes->at(nodeIndexA)->getPosition(), this->nodes->at(nodeIndexB)->getPosition()) <= MinimumDistance)
+               {
+                  if (random() % 2 > 0)
+                  {
+                        outFile << this->nodes->at(nodeIndexA)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexB)->getIdentification() << std::endl;
+                        outFile << this->nodes->at(nodeIndexB)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexA)->getIdentification() << std::endl;
+                  }
+                  else
+                  {
+                     if (random() % 2 > 0) outFile << this->nodes->at(nodeIndexA)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexB)->getIdentification() << std::endl;
+                     else outFile << this->nodes->at(nodeIndexB)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexA)->getIdentification() << std::endl;
 
-					}
+                  }
+               }
 				}
 			}
 			outFile.close();
