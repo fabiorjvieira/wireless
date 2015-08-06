@@ -16,7 +16,7 @@
 
 static float PathLossExponent = 2; //alpha
 static float SNRthreshold = 1; //beta
-static float MinimumDistance = 20; //meters
+static float MinimumDistance = 16; //meters
 static float BandWidth = 20e+6; //Hertz
 static float TransmissionPower = 100e-3; //Watts
 static float ThermalNoise = BOLTZMANN * REFERENCE_TEMPERATURE * BandWidth;
@@ -26,6 +26,21 @@ static float LearningStep = 1e-3;
 
 static std::string NodeFileName;
 static std::string LinkFileName;
+
+static void printParameters()
+{
+   std::cout << "Parameters" << std::endl;
+   std::cout << PARAMETER_PathLossExponent << SEPARATOR << PathLossExponent << std::endl;
+   std::cout << SNRthreshold << SEPARATOR << SNRthreshold << std::endl;
+   std::cout << MinimumDistance << SEPARATOR << MinimumDistance << std::endl;
+   std::cout << BandWidth << SEPARATOR << BandWidth << std::endl;
+   std::cout << TransmissionPower << SEPARATOR << TransmissionPower << std::endl;
+   std::cout << ThermalNoise << SEPARATOR << ThermalNoise << std::endl;
+   std::cout << NoiseFloor << SEPARATOR << NoiseFloor << std::endl;
+   std::cout << LearningStep << SEPARATOR << LearningStep << std::endl;
+   std::cout << NodeFileName << SEPARATOR << NodeFileName << std::endl;
+   std::cout << LinkFileName << SEPARATOR << LinkFileName << std::endl;
+}
 
 static void loadParameters(int nargs, char * args[])
 {
@@ -86,7 +101,7 @@ static void loadParameters(int nargs, char * args[])
 			std::cout << PARAMETER_LinkFileName << std::endl;
 			exit(0);
 		}
-		else std::cout << args[parameterIndex] << PARAMETER_NOT_RECOGNIZED << std::endl;
+		else std::cout << PARAMETER_NOT_RECOGNIZED << SEPARATOR << args[parameterIndex] << std::endl;
 	}
 }
 

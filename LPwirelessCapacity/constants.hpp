@@ -14,10 +14,12 @@ static const std::string NOT_A_LINK = "Not a link: ";
 static const std::string LINK_SYMBOL = "->";
 static const std::string LINK_FILE_TERMINATION = ".link.in";
 static const std::string SEPARATOR = " ";
+static const std::string FILE_SEPARATOR = ".";
 
 static const float BOLTZMANN = 1.3803e-23;
 static const float REFERENCE_TEMPERATURE = 290.0; //kelvin
 static const float NOISE_FIGURE = 0.031622776602; //15dBm
+static const float SNR_MINIMUM_DISTANCE = 1.0;
 
 static const std::string LINEAR_PROGRAM_NAME = "FractionalColoring";
 static const std::string LINEAR_PROGRAM_VARIABLE_PREFIX = "x";

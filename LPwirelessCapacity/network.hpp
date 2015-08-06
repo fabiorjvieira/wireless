@@ -33,7 +33,7 @@ public:
 		this->identification = identification;
 	}
 
-	Position getPosition()
+	Position & getPosition()
 	{
 		return this->position;
 	}
@@ -126,6 +126,7 @@ public:
 	void updateWeight(float weight);
 	Node * getDestination();
 	float getSize();
+	float getSNRsize();
 	float getWeight();
 	unsigned int getIdentification();
 	LinkIdentification getLinkIdentification();
@@ -145,6 +146,41 @@ public:
 		if (linkFile.empty()) linkFile = cliqueNetwork(nodeFile);
 		this->links = Link::loadLinks(linkFile, this->nodes);
 	}
+
+   static void randomNetworks(unsigned int numberOfNodes, unsigned int minimumSquareSide, unsigned int maximumSquareSide, unsigned int step, char * nodeFile)
+   {
+      std::ofstream outFile;
+      std::stringstream buffer;
+      Position position;
+
+      for (unsigned int squareSide = minimumSquareSide; squareSide <= maximumSquareSide; squareSide += step)
+      {
+         try
+         {
+            buffer.str("");
+            buffer << nodeFile << FILE_SEPARATOR << squareSide;
+            outFile.open(buffer.str().data(), std::ifstream::out);
+            if (!outFile.is_open()) throw std::exception();
+
+            srandom(getRandomSeed());
+
+            for (unsigned int nodeIndex = 0; nodeIndex < numberOfNodes; nodeIndex++)
+            {
+               position.x = random() % squareSide;
+               position.y = random() % squareSide;
+               position.z = 0; //??? bidimentional for this time
+
+               outFile << position.x << SEPARATOR << position.y << SEPARATOR << position.z << std::endl;
+            }
+            outFile.close();
+         }
+         catch(std::exception &)
+         {
+            std::cerr << PARAMETER_NodeFileName << SEPARATOR << FILE_NOT_CREATED << nodeFile << std::endl;
+            exit(0);
+         }
+      }
+   }
 
 	std::string cliqueNetwork(std::string nodeFile)
 	{
@@ -200,6 +236,17 @@ public:
 		return this->links;
 	}
 
+	static float snrMinimumDistance(const Position & originPosition, const Position & destinationPosition)
+	{
+      float distance;
+
+      distance = euclideanDistance(destinationPosition, originPosition);
+	   if (distance < 1) distance = SNR_MINIMUM_DISTANCE;
+
+	   return distance;
+	}
+
+
 	static float snr(LinkIdentification linkIdentification, std::vector < LinkIdentification > * schedulingLinkIdentifications)
 	{
 		Node * noiseOrigin;
@@ -212,9 +259,9 @@ public:
 			//attention! linkIdentification is included in linkIdentifications, so euclideanDistance = 0 when noiseLinkIdentifications.at(noiseIndex) == linkIdentification.
 			if (schedulingLinkIdentifications->at(noiseIndex).getIdentification() == linkIdentification.getIdentification()) continue;
 			noiseOrigin = schedulingLinkIdentifications->at(noiseIndex).getLink()->getOrigin();
-			snr += 1 / pow(euclideanDistance(destination->getPosition(), noiseOrigin->getPosition()), PathLossExponent);
+			snr += 1 / pow(snrMinimumDistance(destination->getPosition(), noiseOrigin->getPosition()), PathLossExponent);
 		}
-		snr = (1/pow(linkIdentification.getLink()->getSize(),PathLossExponent)) / (equivalentNoise + snr);
+		snr = (1/pow(linkIdentification.getLink()->getSNRsize(),PathLossExponent)) / (equivalentNoise + snr);
 
 		return snr;
 	}
@@ -223,7 +270,7 @@ public:
 	{
 		bool ok = true;
 		for (unsigned int linkIdentificationIndex = 0; linkIdentificationIndex < schedulingLinkIdentifications->size() and ok; linkIdentificationIndex++)
-			ok = (Network::snr(schedulingLinkIdentifications->at(linkIdentificationIndex), schedulingLinkIdentifications) >= SNRthreshold);
+			ok = (Network::snr(schedulingLinkIdentifications->at(linkIdentificationIndex), schedulingLinkIdentifications) > SNRthreshold);
 
 		return ok;
 	}

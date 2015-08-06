@@ -41,6 +41,23 @@ OK - check noise floor with Rezende
 
 #include "linearprogram.hpp"
 
+//try to remove the less weighted link (the last ones) and test
+bool heuristics(float matchingWeight, std::vector < LinkIdentification > matchingLinkIdentifications)
+{
+   bool matchingOK = false;
+
+   do
+   {
+      matchingWeight -= matchingLinkIdentifications.front().getLink()->getWeight();
+      if (matchingWeight < 1) break;
+      matchingLinkIdentifications.erase(matchingLinkIdentifications.begin());
+      matchingOK = Network::scheduleOK(&matchingLinkIdentifications);
+   }
+   while (not matchingOK);
+
+   return matchingOK;
+}
+
 int main(int nargs, char * args[])
 {
 	int result = 0;
@@ -48,12 +65,20 @@ int main(int nargs, char * args[])
 	WeightGraph * weightGraph;
 	std::vector < LinkIdentification > * matchingLinkIdentifications;
 	LinearProgram * linearProgram;
-	std::vector < LinkIdentification > backupMatchingLinkIdentifications;
-	std::vector < float > linkWeightsHistory;
+	std::vector < float > linkWeightsHistory, matchingWeightsHistory;
 	bool matchingOK, ok, optimal;
 	float matchingWeight;
 
+	if (args[1][0] == 'N')
+   {
+	   //square side = 8,16,32,...,1024,2^20 // nodes = 4, 8, 16, 1024
+	   //-NoiseFloor 0
+	   Network::randomNetworks(atoi(args[2]), atoi(args[3]), atoi(args[4]), atoi(args[5]), args[6]);
+	   return result;
+   }
+
 	loadParameters(nargs, args);
+	printParameters();
 	network = new Network(NodeFileName, LinkFileName);
 	weightGraph = new WeightGraph(network);
 	linearProgram = new LinearProgram(network->getLinks());
@@ -69,7 +94,7 @@ int main(int nargs, char * args[])
 		do
 		{
 		   optimal = true;
-			linearProgram->solve(linkWeightsHistory);
+			linearProgram->solve(linkWeightsHistory, matchingWeightsHistory);
 			matchingLinkIdentifications = new std::vector < LinkIdentification >;
 			matchingWeight = weightGraph->MaxWeightedMatching(matchingLinkIdentifications);
 			matchingOK = Network::scheduleOK(matchingLinkIdentifications);
@@ -88,20 +113,10 @@ int main(int nargs, char * args[])
 				linearProgram->addLinkMatching(LINEAR_PROGRAM_MATCHING_OK, matchingLinkIdentifications);
 			else if (matchingWeight > 1 and matchingWeight <= linearProgram->getConstraintsMatchingNotOKupperBound() and not matchingOK)
 			{
-				backupMatchingLinkIdentifications = (*matchingLinkIdentifications);
 				//???optimization insert sort while insert in matchingLinkIdentifications
 				//sort in a non-decreasing order of weights
 				std::sort(matchingLinkIdentifications->rbegin(), matchingLinkIdentifications->rend());
-
-				//heuristics
-				//try to remove the less weighted link (the last ones) and test
-				while (not matchingOK)
-				{
-					matchingWeight -= matchingLinkIdentifications->front().getLink()->getWeight();
-					if (matchingWeight < 1) break;
-					matchingLinkIdentifications->erase(matchingLinkIdentifications->begin());
-					matchingOK = Network::scheduleOK(matchingLinkIdentifications);
-				}
+            matchingOK = heuristics(matchingWeight, *matchingLinkIdentifications);
 
 				if (not matchingOK)
             {
@@ -124,11 +139,21 @@ int main(int nargs, char * args[])
 		std::cout << " l" << solutionIndex;
 		if (solutionIndex % (network->getLinks()->size() +1) == 0) std::cout << std::endl;
 	}
-	for (unsigned int solutionIndex = 0; solutionIndex < linkWeightsHistory.size(); solutionIndex++)
-	{
-		std::cout << linkWeightsHistory.at(solutionIndex) ;
-		if (solutionIndex % (network->getLinks()->size() +1) == 0) std::cout << std::endl;
-	}
+   for (unsigned int solutionIndex = 0; solutionIndex < linkWeightsHistory.size(); solutionIndex++)
+   {
+      std::cout << linkWeightsHistory.at(solutionIndex) ;
+      if (solutionIndex % (network->getLinks()->size() +1) == 0) std::cout << std::endl;
+   }
+
+   ???ta errado porque os matching sao adicionados conforme o programa vai rodando
+         melhor seria zerar os dois vetores e colocar um debug no loop e no final pegar a soluçao
+   matchingWeight = 0;
+   std::cout << "matchingWeight";
+   for (unsigned int solutionIndex = 0; solutionIndex < matchingWeightsHistory.size(); solutionIndex++)
+   {
+      std::cout << " m" << solutionIndex;
+      if (solutionIndex % (linearProgram->getLinkMatchingOK().size() +1) == 0) std::cout << std::endl;
+   }
 
 	return result;
 }
