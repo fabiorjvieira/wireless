@@ -143,7 +143,7 @@ public:
 	Network(std::string nodeFile, std::string linkFile)
 	{
 		this->nodes = Node::loadNodes(nodeFile);
-		if (linkFile.empty()) linkFile = cliqueNetwork(nodeFile);
+		if (linkFile.empty()) linkFile = randomLinks(nodeFile, false);
 		this->links = Link::loadLinks(linkFile, this->nodes);
 	}
 
@@ -182,7 +182,7 @@ public:
       }
    }
 
-	std::string cliqueNetwork(std::string nodeFile)
+	std::string randomLinks(std::string nodeFile, bool pseudoClique)
 	{
 		std::ofstream outFile;
 		std::string linkFile = nodeFile + LINK_FILE_TERMINATION;
@@ -200,16 +200,19 @@ public:
 				{
                if (euclideanDistance(this->nodes->at(nodeIndexA)->getPosition(), this->nodes->at(nodeIndexB)->getPosition()) <= MinimumDistance)
                {
-                  if (random() % 2 > 0)
+                  if (random() % 2 > 0 or pseudoClique)
                   {
-                        outFile << this->nodes->at(nodeIndexA)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexB)->getIdentification() << std::endl;
-                        outFile << this->nodes->at(nodeIndexB)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexA)->getIdentification() << std::endl;
-                  }
-                  else
-                  {
-                     if (random() % 2 > 0) outFile << this->nodes->at(nodeIndexA)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexB)->getIdentification() << std::endl;
-                     else outFile << this->nodes->at(nodeIndexB)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexA)->getIdentification() << std::endl;
+                     if (random() % 2 > 0)
+                     {
+                           outFile << this->nodes->at(nodeIndexA)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexB)->getIdentification() << std::endl;
+                           outFile << this->nodes->at(nodeIndexB)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexA)->getIdentification() << std::endl;
+                     }
+                     else
+                     {
+                        if (random() % 2 > 0) outFile << this->nodes->at(nodeIndexA)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexB)->getIdentification() << std::endl;
+                        else outFile << this->nodes->at(nodeIndexB)->getIdentification() << SEPARATOR << this->nodes->at(nodeIndexA)->getIdentification() << std::endl;
 
+                     }
                   }
                }
 				}
