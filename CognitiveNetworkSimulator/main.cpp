@@ -131,7 +131,7 @@ int main(int argc, const char **argv)
       cognitiveRequestQueue.request.clear();
       loadCognitiveRequestQueue(cognitiveRequestQueueFileName, cognitiveRequestQueueFilePosition, cognitiveRequestQueue, *agentList, interval+2);
 
-     if (interval < maxInterval and false)
+     if (interval < maxInterval)
      {
          //clear cognitive queue
          cognitiveQueue.events.clear();
