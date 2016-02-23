@@ -654,6 +654,7 @@ char * writeCognitiveRequestQueue(key_t memoryKey, char * sharedMemory, Cognitiv
    return sharedMemory;
 }
 
+/*debug* /
 char * saveCognitiveRequestQueue(key_t memoryKey, char * sharedMemory, CognitiveRequestQueue & cognitiveRequestQueue, unsigned long long int interval)
 {
    //Shared memory I/O ports
@@ -682,8 +683,10 @@ char * saveCognitiveRequestQueue(key_t memoryKey, char * sharedMemory, Cognitive
    writeOn << COGNITIVE_REQUEST_QUEUE_PREFIX << END_DATA;
    writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
+   sharedMemory += writeOn.str().size();
    return sharedMemory;
 }
+/*debug*/
 
 char * readCognitiveQueue(key_t memoryKey, char * sharedMemory, CognitiveQueue & cognitiveQueue, AgentList * agentList, unsigned long long int interval)
 {
