@@ -578,6 +578,7 @@ char * writeSensoringQueue(key_t memoryKey, char * sharedMemory, SensoringQueue 
       sharedMemory += writeOn.str().size();
    }
    //end tag
+   writeOn.str("");
    writeOn << SENSORING_QUEUE_PREFIX << END_DATA;
    writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
@@ -613,6 +614,7 @@ char * writeCognitiveSuccessQueue(key_t memoryKey, char * sharedMemory, SuccessQ
       sharedMemory += writeOn.str().size();
    }
    //end tag
+   writeOn.str("");
    writeOn << COGNITIVE_SUCCESS_QUEUE_PREFIX << END_DATA;
    writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
@@ -646,6 +648,7 @@ char * writeCognitiveRequestQueue(key_t memoryKey, char * sharedMemory, Cognitiv
       sharedMemory += writeOn.str().size();
    }
    //end tag
+   writeOn.str("");
    writeOn << COGNITIVE_REQUEST_QUEUE_PREFIX << END_DATA;
    writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
@@ -680,6 +683,7 @@ char * saveCognitiveRequestQueue(key_t memoryKey, char * sharedMemory, Cognitive
       sharedMemory += writeOn.str().size();
    }
    //end tag
+   writeOn.str("");
    writeOn << COGNITIVE_REQUEST_QUEUE_PREFIX << END_DATA;
    writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
