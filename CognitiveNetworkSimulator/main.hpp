@@ -698,22 +698,25 @@ char * readCognitiveQueue(key_t memoryKey, char * sharedMemory, CognitiveQueue &
    char readFrom[TAG_SIZE];
    std::string parser;
    Event event;
-   std::stringstream tag;
+   std::stringstream tag("");
 
    tag << COGNITIVE_QUEUE_PREFIX << START_DATA;
    tag << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(&readFrom, sharedMemory, TAG_SIZE);
+   parser = readFrom;
    //test start tag - 24 bytes (TAG_SIZE)
-   if (tag.str().compare(readFrom) == 0)
+   /*debug*/std::cout << "[" << tag.str() << "][" << "readFrom" << "][" << parser.substr(0,TAG_SIZE) << "]" << std::endl;
+   if (tag.str().compare(parser.substr(0,TAG_SIZE)) == 0)
    {
       tag.str("");
       tag << COGNITIVE_QUEUE_PREFIX << END_DATA;
       tag << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
       sharedMemory += TAG_SIZE;
       memcpy(&readFrom, sharedMemory, TAG_SIZE);
-      do
+      parser = readFrom;
+      //test end tag - 24 bytes (TAG_SIZE)
+      while (tag.str().compare(parser.substr(0,TAG_SIZE)) != 0);
       {
-         parser = readFrom; //(readFrom, TAG_SIZE);
          event.interval = byteToInt(parser.substr(0,INTERVAL_SIZE));
          if (interval == event.interval)
          {
@@ -733,9 +736,9 @@ char * readCognitiveQueue(key_t memoryKey, char * sharedMemory, CognitiveQueue &
          else std::cout << "Wrong interval. Queue ignored." << std::endl;
          sharedMemory += TAG_SIZE;
          memcpy(&readFrom, sharedMemory, TAG_SIZE);
+         parser = readFrom;
+         /*debug*/std::cout << "[" << tag.str() << "][" << "readFrom" << "][" << parser.substr(0,TAG_SIZE) << "]" << std::endl;
       }
-      //test end tag - 24 bytes (TAG_SIZE)
-      while (tag.str().compare(readFrom) != 0);
    }
    else std::cout << "Start tag is missing. Cognitive queue ignored." << std::endl;
 
