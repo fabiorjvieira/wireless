@@ -14,6 +14,21 @@
 
 int main(int argc, const char **argv)
 {
+   AgentList * agentList;
+   std::string agentListFileName = argv[1];
+   std::string cognitiveRequestQueueFileName = argv[2];
+   double intervalExpectedValue = atof(argv[3]);
+   double deltaIntervalExpectedValue  = atof(argv[4]);
+   unsigned int maxInterval = atoi(argv[5]);
+
+   agentList = loadAgents(agentListFileName);
+   saveCognitiveRequestQueue(cognitiveRequestQueueFileName, agentList->cognitiveAntennas, agentList->cognitiveClients, maxInterval, intervalExpectedValue, deltaIntervalExpectedValue);
+
+   return 0;
+}
+
+int main0(int argc, const char **argv)
+{
    //memory
    IPCkit * ipcKit = new IPCkit;
    char * sharedMemory;

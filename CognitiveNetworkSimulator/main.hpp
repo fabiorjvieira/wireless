@@ -13,11 +13,12 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
-#include <cfloat>
+//#include <cdouble>
 #include <algorithm>
 #include <unistd.h>
 #include <string.h>
 #include <iomanip>
+#include <time.h>
 
 #include "memory.hpp"
 
@@ -36,24 +37,24 @@ std::string cognitiveSuccessQueueFileName = "./cognitiveSuccess.Queue";
 std::string licensedSuccessQueueFileName = "./licensedSuccess.Queue";
 std::string sensoringQueueFileName = "./sensoring.Queue";
 
-float noiseFloor(long double bandWidth)
+double noiseFloor(long double bandWidth)
 {
-   float thermalNoise = BOLTZMANN * REFERENCE_TEMPERATURE * bandWidth;
-   float noiseFloor = thermalNoise; //* NOISE_FIGURE; // noiseFigure; //perda dentro do receptor nao ideal
+   double thermalNoise = BOLTZMANN * REFERENCE_TEMPERATURE * bandWidth;
+   double noiseFloor = thermalNoise; //* NOISE_FIGURE; // noiseFigure; //perda dentro do receptor nao ideal
    noiseFloor = pow(100,-3);
    return noiseFloor;
 }
 
-float dBtoSNR(long double snrThreshold)
+double dBtoSNR(long double snrThreshold)
 {
-   float value = pow(10,snrThreshold/ (float)10);
+   double value = pow(10,snrThreshold/ (double)10);
    return value;
 }
 
 //primitive type
 struct Position
 {
-   float x, y, z;
+   double x, y, z;
 };
 
 enum AgentType{AT,AW,AH,AC,PC,CA,CC,IV};
@@ -91,9 +92,9 @@ AgentType char2AgentType(char typeChar[3])
 
 struct WirelessParameters
 {
-   float snrThreshold;
-   float pathLoss;
-   float transmissionPower;
+   double snrThreshold;
+   double pathLoss;
+   double transmissionPower;
    unsigned long int channels;
    unsigned long int carrier;
    unsigned long int bandWidth;
@@ -161,7 +162,7 @@ struct SuccessQueue
 struct SensoringQueue
 {
    std ::vector < Event > events;
-   std ::vector < float > risk;
+   std ::vector < double > risk;
 };
 
 struct CognitiveRequest
@@ -177,6 +178,15 @@ struct CognitiveRequestQueue
 {
    std ::vector < CognitiveRequest > request;
 };
+
+
+double euclidianDistance(Agent & agentA, Agent & agentB)
+{
+   return sqrt(pow(agentA.position.x - agentB.position.x, 2) + pow(agentA.position.y - agentB.position.y, 2) + pow(agentA.position.z - agentB.position.z, 2));
+}
+
+
+
 
 /*wireless parameters file structure
 TYPE pathLoss snrThreshold(dBm) transmissioPower channels carrier(Hz) bandWidth(Hz)
@@ -534,7 +544,7 @@ void saveCognitiveQueue(std::string fileName, CognitiveQueue & cognitiveQueue, u
       file.close();
 }
 
-std::string riskToString(float risk)
+std::string riskToString(double risk)
 {
     std::stringstream riskString;
 	riskString << roundf(risk * 100) / 100;
@@ -745,12 +755,12 @@ char * readCognitiveQueue(key_t memoryKey, char * sharedMemory, CognitiveQueue &
    return sharedMemory;
 }
 
-float interference(Agent * transmitter, Agent * receiver, Agent * interfering, WirelessParameters * wirelessParametersList)
+double interference(Agent * transmitter, Agent * receiver, Agent * interfering, WirelessParameters * wirelessParametersList)
 {
-   float interference = 0, distance, linkSize;
+   double interference = 0, distance, linkSize;
 
-   distance = sqrt(pow(receiver->position.x - interfering->position.x, 2) + pow(receiver->position.y - interfering->position.y,2) + pow(receiver->position.z - interfering->position.z,2));
-   linkSize = sqrt(pow(receiver->position.x - transmitter->position.x, 2) + pow(receiver->position.y - transmitter->position.y,2) + pow(receiver->position.z - transmitter->position.z,2));
+   distance = euclidianDistance(*receiver, *interfering); //sqrt(pow(receiver->position.x - interfering->position.x, 2) + pow(receiver->position.y - interfering->position.y,2) + pow(receiver->position.z - interfering->position.z,2));
+   linkSize = euclidianDistance(*receiver, *transmitter); //sqrt(pow(receiver->position.x - transmitter->position.x, 2) + pow(receiver->position.y - transmitter->position.y,2) + pow(receiver->position.z - transmitter->position.z,2));
    if (distance < 1) distance = 1;
    if (linkSize < 1) linkSize = 1;
    interference = (dBtoSNR(wirelessParametersList[receiver->type].snrThreshold) *
@@ -764,7 +774,7 @@ void licensedSuccessQueueCalculus(SuccessQueue & licensedSuccessQueue, LicensedQ
 {
    Agent * transmitterA, * receiverA, * transmitterB, * receiverB;
    unsigned short int channelA, channelB;
-   float transmiterInterferenceL, receiverInterferenceL, transmiterInterferenceC, receiverInterferenceC;
+   double transmiterInterferenceL, receiverInterferenceL, transmiterInterferenceC, receiverInterferenceC;
    Success success;
 
    for (unsigned int licensedEventIndexA = 0; licensedEventIndexA < licensedQueue.events.size() and interval == licensedQueue.events.at(licensedEventIndexA).interval; licensedEventIndexA++)
@@ -864,7 +874,7 @@ void cognitiveSuccessQueueCalculus(SuccessQueue & cognitiveSuccessQueue, License
 {
    Agent * transmitterA, * receiverA, * transmitterB, * receiverB;
    unsigned short int channelA, channelB;
-   float transmiterInterferenceL, receiverInterferenceL, transmiterInterferenceC, receiverInterferenceC;
+   double transmiterInterferenceL, receiverInterferenceL, transmiterInterferenceC, receiverInterferenceC;
    Success success;
 
    for (unsigned int cognitiveEventIndexA = 0; cognitiveEventIndexA < cognitiveQueue.events.size() and interval == cognitiveQueue.events.at(cognitiveEventIndexA).interval; cognitiveEventIndexA++)
@@ -951,11 +961,11 @@ void cognitiveSuccessQueueCalculus(SuccessQueue & cognitiveSuccessQueue, License
    }
 }
 
-float risk(Agent * sensor, Agent * transmitter, WirelessParameters * wirelessParametersList)
+double risk(Agent * sensor, Agent * transmitter, WirelessParameters * wirelessParametersList)
 {
-   float risk, distance, fromCognitveAntennaToLicensedReceiver, fromCognitveClientToLicensedReceiver, maximumLinkSize, maximumSensorLinkSize;
+   double risk, distance, fromCognitveAntennaToLicensedReceiver, fromCognitveClientToLicensedReceiver, maximumLinkSize, maximumSensorLinkSize;
 
-   distance = sqrt(pow(sensor->position.x - transmitter->position.x, 2) + pow(sensor->position.y - transmitter->position.y,2) + pow(sensor->position.z - transmitter->position.z,2));
+   distance = euclidianDistance(*sensor, *transmitter); //sqrt(pow(sensor->position.x - transmitter->position.x, 2) + pow(sensor->position.y - transmitter->position.y,2) + pow(sensor->position.z - transmitter->position.z,2));
    maximumLinkSize = pow((wirelessParametersList[transmitter->type].transmissionPower / dBtoSNR(wirelessParametersList[transmitter->type].snrThreshold)) / noiseFloor(wirelessParametersList[transmitter->type].bandWidth),1/wirelessParametersList[transmitter->type].pathLoss);
    maximumSensorLinkSize = pow((wirelessParametersList[sensor->type].transmissionPower/ dBtoSNR(wirelessParametersList[sensor->type].snrThreshold)) / noiseFloor(wirelessParametersList[sensor->type].bandWidth),1/wirelessParametersList[sensor->type].pathLoss);
    fromCognitveAntennaToLicensedReceiver = distance - maximumLinkSize;
@@ -979,7 +989,7 @@ void sensoringQueueCalculus(AgentList * agentList, SensoringQueue & sensoringQue
 {
    unsigned long long int numberOfChannels = 0;
    unsigned long int channel;
-   float riskValue, maximumRiskValue;
+   double riskValue, maximumRiskValue;
    Event sensor;
    Agent * transmitter, * maximumRiskAgent;
 
@@ -1064,6 +1074,76 @@ void sensoringQueueCalculus(AgentList * agentList, SensoringQueue & sensoringQue
          sensoringQueue.risk.push_back(maximumRiskValue);
       }
    }
+}
+
+void saveCognitiveRequestQueue(std::string fileName, std::vector < Agent > cognitiveAntennas, std::vector < Agent > & cognitiveClients, unsigned long long int lastInterval, double intervalExpectedValue, double deltaIntervalExpectedValue)
+{
+   std::ofstream file;
+   unsigned int cognitiveAntennaIndex, cognitiveClientIndex;
+   std::vector < unsigned int > cognitiveClientList;
+   CognitiveRequest request;
+   double distance;
+   bool include;
+
+   file.open(fileName.data(), std::ios::out);
+   if (not file)
+    {
+      std::cerr << fileName << " not found!" << std::endl;
+      exit(1);
+   }
+   std::cout << "#Writing file:" << fileName << std::endl;
+
+   request.interval = 0;
+   srand (time(NULL));
+
+   while (lastInterval >= request.interval)
+   {
+      //random select one cognitive antenna
+      cognitiveAntennaIndex = rand()%(cognitiveAntennas.size());
+      //build a list of the cognitive clients in the range of the selected cognitive antenna
+      cognitiveClientList.clear();
+      for (unsigned int clientIndex = 0; clientIndex < cognitiveClients.size(); clientIndex++)
+      {
+         distance = euclidianDistance(cognitiveAntennas.at(cognitiveAntennaIndex), cognitiveClients.at(clientIndex));
+         include = true;
+         for (unsigned int antennaIndex = 0; antennaIndex < cognitiveAntennas.size(); antennaIndex++)
+         {
+            if (distance > euclidianDistance(cognitiveAntennas.at(antennaIndex), cognitiveClients.at(clientIndex)))
+            {
+               include = false;
+               break;
+            }
+         }
+         if (include) cognitiveClientList.push_back(clientIndex);
+      }
+      //random select one of the clients from the list
+      cognitiveClientIndex = rand()%(cognitiveClientList.size());
+      cognitiveClientIndex = cognitiveClientList.at(cognitiveClientIndex);
+      //calculate the next arrival interval (sample from an exponential distribution and sum with the last arrival interval) and the number requested intervals from an exponential distribution
+      request.interval -= floor(log(1-((double)rand()/(double)RAND_MAX))/intervalExpectedValue);
+      request.deltaInterval = ceil(-log(1-((double)rand()/(double)RAND_MAX))/deltaIntervalExpectedValue);
+
+      request.transmitter = & cognitiveAntennas.at(cognitiveAntennaIndex);
+      request.receiver = & cognitiveClients.at(cognitiveClientIndex);
+      request.minimumThroughput = 1;
+
+      file << std::setw(INTERVAL_SIZE) << std::setfill(CHAR_FILLER) << std::right << request.interval;
+      file << FIELD_SEPARATOR;
+      file << AgentTypeChar[request.transmitter->type];
+      file << FIELD_SEPARATOR;
+      file << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << request.transmitter->identification;
+      file << FIELD_SEPARATOR;
+      file << AgentTypeChar[request.receiver->type];
+      file << FIELD_SEPARATOR;
+      file << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << request.receiver->identification;
+      file << FIELD_SEPARATOR;
+      file << std::setw(DELTA_INTERVAL_SIZE) << std::setfill(CHAR_FILLER) << std::right << request.deltaInterval;
+      file << FIELD_SEPARATOR;
+      file << std::setw(THROUGHPUT_SIZE) << std::setfill(CHAR_FILLER) << std::right << request.minimumThroughput;
+      file << std::endl;
+   }
+
+   file.close();
 }
 
 #endif /* MAIN_HPP_ */
