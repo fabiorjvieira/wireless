@@ -12,7 +12,7 @@
 //shared memory size 1024 memory segments (depends on the size of the SO segments)
 //simulator.bin examples/example01.Agents examples/configuration01.WirelessParameters examples/licensedEvents01.Queue examples/cognitiveRequests01.Queue 1000 69 1024
 
-int main(int argc, const char **argv)
+int main0(int argc, const char **argv)
 {
    AgentList * agentList;
    std::string agentListFileName = argv[1];
@@ -27,7 +27,7 @@ int main(int argc, const char **argv)
    return 0;
 }
 
-int main0(int argc, const char **argv)
+int main(int argc, const char **argv)
 {
    //memory
    IPCkit * ipcKit = new IPCkit;
