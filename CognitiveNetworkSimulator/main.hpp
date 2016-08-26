@@ -1082,7 +1082,7 @@ void saveCognitiveRequestQueue(std::string fileName, std::vector < Agent > cogni
    unsigned int cognitiveAntennaIndex, cognitiveClientIndex;
    std::vector < unsigned int > cognitiveClientList;
    CognitiveRequest request;
-   double distance;
+   double distance, timeOfArrival = 0;
    bool include;
 
    file.open(fileName.data(), std::ios::out);
@@ -1120,7 +1120,8 @@ void saveCognitiveRequestQueue(std::string fileName, std::vector < Agent > cogni
       cognitiveClientIndex = rand()%(cognitiveClientList.size());
       cognitiveClientIndex = cognitiveClientList.at(cognitiveClientIndex);
       //calculate the next arrival interval (sample from an exponential distribution and sum with the last arrival interval) and the number requested intervals from an exponential distribution
-      request.interval -= floor(log(1-((double)rand()/(double)RAND_MAX))/intervalExpectedValue);
+      timeOfArrival -= log(1-((double)rand()/(double)RAND_MAX))/intervalExpectedValue;
+      request.interval = floor(timeOfArrival);
       request.deltaInterval = ceil(-log(1-((double)rand()/(double)RAND_MAX))/deltaIntervalExpectedValue);
 
       request.transmitter = & cognitiveAntennas.at(cognitiveAntennaIndex);
