@@ -27,6 +27,7 @@ static const char FIELD_SEPARATOR = ' ';
 static const double BOLTZMANN = 1.3803e-23;
 static const double REFERENCE_TEMPERATURE = 290.0; //kelvin
 static const double NOISE_FIGURE = 0.031622776602; //15dBm
+static const double TIME_FRACTION = 1; //15dBm
 
 static const double COGNITIVE_SNR = 25.0; //1% of loss with 54Mbs
 static const double PASSIVE_PRIMARY_SNR = 25.0; //quality
@@ -1121,7 +1122,7 @@ void saveCognitiveRequestQueue(std::string fileName, std::vector < Agent > cogni
       cognitiveClientIndex = cognitiveClientList.at(cognitiveClientIndex);
       //calculate the next arrival interval (sample from an exponential distribution and sum with the last arrival interval) and the number requested intervals from an exponential distribution
       timeOfArrival -= log(1-((double)rand()/(double)RAND_MAX))/intervalExpectedValue;
-      request.interval = floor(timeOfArrival);
+      request.interval = floor(timeOfArrival/TIME_FRACTION);
       request.deltaInterval = ceil(-log(1-((double)rand()/(double)RAND_MAX))/deltaIntervalExpectedValue);
 
       request.transmitter = & cognitiveAntennas.at(cognitiveAntennaIndex);
