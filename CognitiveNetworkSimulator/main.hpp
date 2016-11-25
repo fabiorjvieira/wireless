@@ -1123,7 +1123,7 @@ void saveCognitiveRequestQueue(std::string fileName, std::vector < Agent > cogni
       //calculate the next arrival interval (sample from an exponential distribution and sum with the last arrival interval) and the number requested intervals from an exponential distribution
       timeOfArrival -= log(1-((double)rand()/(double)RAND_MAX))/intervalExpectedValue;
       request.interval = floor(timeOfArrival/TIME_FRACTION);
-      request.deltaInterval = ceil(-log(1-((double)rand()/(double)RAND_MAX))/deltaIntervalExpectedValue);
+      request.deltaInterval = ceil(-log(1-((double)rand()/(double)RAND_MAX))*deltaIntervalExpectedValue);
 
       request.transmitter = & cognitiveAntennas.at(cognitiveAntennaIndex);
       request.receiver = & cognitiveClients.at(cognitiveClientIndex);
