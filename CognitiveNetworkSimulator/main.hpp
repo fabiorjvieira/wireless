@@ -1148,4 +1148,75 @@ void saveCognitiveRequestQueue(std::string fileName, std::vector < Agent > cogni
    file.close();
 }
 
+void saveLicensedEventsQueue(std::string fileName, std::vector < Agent > licensedAntennas, std::vector < Agent > & licensedActiveClients, std::vector < Agent > & licensePassiveClients, unsigned long long int lastInterval, double intervalExpectedValue, double deltaIntervalExpectedValue)
+{
+   std::ofstream file;
+   unsigned int licensedAntennaIndex, licensedActiveClientIndex;
+   std::vector < unsigned int > cognitiveClientList;
+   CognitiveRequest request;
+   double distance, timeOfArrival = 0;
+   bool include;
+
+   file.open(fileName.data(), std::ios::out);
+   if (not file)
+    {
+      std::cerr << fileName << " not found!" << std::endl;
+      exit(1);
+   }
+   std::cout << "#Writing file:" << fileName << std::endl;
+
+   request.interval = 0;
+   srand (time(NULL));
+
+   while (lastInterval >= request.interval)
+   {
+      //random select one cognitive antenna
+      cognitiveAntennaIndex = rand()%(cognitiveAntennas.size());
+      //build a list of the cognitive clients in the range of the selected cognitive antenna
+      cognitiveClientList.clear();
+      for (unsigned int clientIndex = 0; clientIndex < cognitiveClients.size(); clientIndex++)
+      {
+         distance = euclidianDistance(cognitiveAntennas.at(cognitiveAntennaIndex), cognitiveClients.at(clientIndex));
+         include = true;
+         for (unsigned int antennaIndex = 0; antennaIndex < cognitiveAntennas.size(); antennaIndex++)
+         {
+            if (distance > euclidianDistance(cognitiveAntennas.at(antennaIndex), cognitiveClients.at(clientIndex)))
+            {
+               include = false;
+               break;
+            }
+         }
+         if (include) cognitiveClientList.push_back(clientIndex);
+      }
+      //random select one of the clients from the list
+      cognitiveClientIndex = rand()%(cognitiveClientList.size());
+      cognitiveClientIndex = cognitiveClientList.at(cognitiveClientIndex);
+      //calculate the next arrival interval (sample from an exponential distribution and sum with the last arrival interval) and the number requested intervals from an exponential distribution
+      timeOfArrival -= log(1-((double)rand()/(double)RAND_MAX))/intervalExpectedValue;
+      request.interval = floor(timeOfArrival/TIME_FRACTION);
+      request.deltaInterval = ceil(-log(1-((double)rand()/(double)RAND_MAX))*deltaIntervalExpectedValue);
+
+      request.transmitter = & cognitiveAntennas.at(cognitiveAntennaIndex);
+      request.receiver = & cognitiveClients.at(cognitiveClientIndex);
+      request.minimumThroughput = 1;
+
+      file << std::setw(INTERVAL_SIZE) << std::setfill(CHAR_FILLER) << std::right << request.interval;
+      file << FIELD_SEPARATOR;
+      file << AgentTypeChar[request.transmitter->type];
+      file << FIELD_SEPARATOR;
+      file << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << request.transmitter->identification;
+      file << FIELD_SEPARATOR;
+      file << AgentTypeChar[request.receiver->type];
+      file << FIELD_SEPARATOR;
+      file << std::setw(AGENT_ID_SIZE) << std::setfill(CHAR_FILLER) << std::right << request.receiver->identification;
+      file << FIELD_SEPARATOR;
+      file << std::setw(DELTA_INTERVAL_SIZE) << std::setfill(CHAR_FILLER) << std::right << request.deltaInterval;
+      file << FIELD_SEPARATOR;
+      file << std::setw(THROUGHPUT_SIZE) << std::setfill(CHAR_FILLER) << std::right << request.minimumThroughput;
+      file << std::endl;
+   }
+
+   file.close();
+}
+
 #endif /* MAIN_HPP_ */
