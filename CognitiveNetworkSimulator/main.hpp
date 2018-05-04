@@ -970,7 +970,9 @@ double risk(Agent * sensor, Agent * transmitter, WirelessParameters * wirelessPa
    maximumLinkSize = pow((wirelessParametersList[transmitter->type].transmissionPower / dBtoSNR(wirelessParametersList[transmitter->type].snrThreshold)) / noiseFloor(wirelessParametersList[transmitter->type].bandWidth),1/wirelessParametersList[transmitter->type].pathLoss);
    maximumSensorLinkSize = pow((wirelessParametersList[sensor->type].transmissionPower/ dBtoSNR(wirelessParametersList[sensor->type].snrThreshold)) / noiseFloor(wirelessParametersList[sensor->type].bandWidth),1/wirelessParametersList[sensor->type].pathLoss);
    fromCognitveAntennaToLicensedReceiver = distance - maximumLinkSize;
-   fromCognitveClientToLicensedReceiver = distance - maximumLinkSize - maximumSensorLinkSize;
+   /*comment - we consider all cognitive clients at the same possition of the cognitive antenna*/
+   fromCognitveClientToLicensedReceiver = distance - maximumLinkSize;
+   //fromCognitveClientToLicensedReceiver = distance - maximumLinkSize - maximumSensorLinkSize;
    if (distance < 1) distance = 1;
    if (fromCognitveAntennaToLicensedReceiver < 1) fromCognitveAntennaToLicensedReceiver = 1;
    if (fromCognitveClientToLicensedReceiver < 1) fromCognitveClientToLicensedReceiver = 1;
