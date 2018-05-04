@@ -659,6 +659,7 @@ char * writeCognitiveRequestQueue(key_t memoryKey, char * sharedMemory, Cognitiv
       sharedMemory += writeOn.str().size();
    }
    //end tag
+   memcpy(sharedMemory, writeOn.str().data(), writeOn.str().size());
    writeOn.str("");
    writeOn << COGNITIVE_REQUEST_QUEUE_PREFIX << END_DATA;
    writeOn << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
@@ -711,6 +712,14 @@ char * readCognitiveQueue(key_t memoryKey, char * sharedMemory, CognitiveQueue &
    Event event;
    std::stringstream tag("");
 
+   // Aline: to later copy each component from the array of char read from the memory
+   unsigned char localInterval[INTERVAL_SIZE];
+   char transmitterType[AGENT_TYPE_SIZE];
+   char receiverType[AGENT_TYPE_SIZE];
+   char receiverID[AGENT_ID_SIZE];
+   unsigned char localChannel[CHANNEL_SIZE];
+  
+
    tag << COGNITIVE_QUEUE_PREFIX << START_DATA;
    tag << std::setw(KEY_SIZE) << std::setfill(CHAR_FILLER) << std::right << memoryKey;
    memcpy(&readFrom, sharedMemory, TAG_SIZE);
@@ -726,18 +735,33 @@ char * readCognitiveQueue(key_t memoryKey, char * sharedMemory, CognitiveQueue &
       memcpy(&readFrom, sharedMemory, TAG_SIZE);
       parser = readFrom;
       //test end tag - 24 bytes (TAG_SIZE)
-      while (tag.str().compare(parser.substr(0,TAG_SIZE)) != 0);
+      while (tag.str().compare(parser.substr(0,TAG_SIZE)) != 0) //;
       {
-         event.interval = byteToInt(parser.substr(0,INTERVAL_SIZE));
+        // Aline: 2 lines below and comment on the third line below 
+         memcpy(&localInterval, &readFrom[0], INTERVAL_SIZE);
+         event.interval = byteToInt(localInterval, INTERVAL_SIZE);
+         //event.interval = byteToInt(parser.substr(0,INTERVAL_SIZE));
          if (interval == event.interval)
          {
-            if (parser.substr(7,AGENT_TYPE_SIZE).compare(AgentTypeChar[CA]) == 0)
+            // Aline
+            memcpy(&transmitterType, &readFrom[7], AGENT_TYPE_SIZE);
+            if (strcmp(transmitterType, AgentTypeChar[CA]) == 0)
             {
-               event.transmitter = & agentList->cognitiveAntennas.at(atoi(parser.substr(9,AGENT_ID_SIZE).data()));
-               if (parser.substr(12,AGENT_TYPE_SIZE).compare(AgentTypeChar[CC]) == 0)
+               memcpy(&transmitterID, &readFrom[9], AGENT_ID_SIZE);
+               event.transmitter = & agentList->cognitiveAntennas.at(atoi(transmitterID));
+            //if (parser.substr(7,AGENT_TYPE_SIZE).compare(AgentTypeChar[CA]) == 0)
+            //{
+               //event.transmitter = & agentList->cognitiveAntennas.at(atoi(parser.substr(9,AGENT_ID_SIZE).data()));
+               memcpy(&receiverType, &readFrom[12], AGENT_TYPE_SIZE);
+               if (strcmp(receiverType, AgentTypeChar[CC]) == 0)
+               //if (parser.substr(12,AGENT_TYPE_SIZE).compare(AgentTypeChar[CC]) == 0)
                {
-                  event.receiver = & agentList->cognitiveClients.at(atoi(parser.substr(14,AGENT_ID_SIZE).data()));
-                  event.channel = byteToInt(parser.substr(17,CHANNEL_SIZE));
+                  memcpy(&receiverID, &readFrom[14], AGENT_ID_SIZE);
+                  event.receiver = & agentList->cognitiveClients.at(atoi(receiverID));
+                  memcpy(&localChannel, &readFrom[17], CHANNEL_SIZE);
+                  event.channel = byteToInt(localChannel, CHANNEL_SIZE);
+                  //event.receiver = & agentList->cognitiveClients.at(atoi(parser.substr(14,AGENT_ID_SIZE).data()));
+                  //event.channel = byteToInt(parser.substr(17,CHANNEL_SIZE));
                   cognitiveQueue.events.push_back(event);
                }
                else std::cout << "Receiver type != CC. Event ignored." << std::endl;
@@ -748,7 +772,7 @@ char * readCognitiveQueue(key_t memoryKey, char * sharedMemory, CognitiveQueue &
          sharedMemory += TAG_SIZE;
          memcpy(&readFrom, sharedMemory, TAG_SIZE);
          parser = readFrom;
-         /*debug*/std::cout << "[" << tag.str() << "][" << "readFrom" << "][" << parser.substr(0,TAG_SIZE) << "]" << std::endl;
+         /*debug*/std::cout << "[" << tag.str() << "][" << "readFrom (next) " << "][" << parser.substr(0,TAG_SIZE) << "]" << std::endl;
       }
    }
    else std::cout << "Start tag is missing. Cognitive queue ignored." << std::endl;
